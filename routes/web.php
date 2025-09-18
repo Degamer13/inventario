@@ -14,7 +14,14 @@ use App\Livewire\Responsables\ResponsableIndex;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
+});
+
+// Redirección para compatibilidad con Laravel Breeze/Jetstream
+Route::get('/home', function () {
+    return redirect()->route('dashboard');
 })->name('home');
 
 Route::view('dashboard', 'dashboard')
@@ -34,15 +41,15 @@ Route::middleware(['auth'])->group(function () {
     // Rutas de responsables (Livewire clásico)
     Route::get('responsables', ResponsableIndex::class)
         ->name('responsables.index'); // permiso se controla dentro del componente
-      // Rutas de Roles  (Livewire clásico)
-Route::get('roles', RoleIndex::class)
+
+    // Rutas de Roles (Livewire clásico)
+    Route::get('roles', RoleIndex::class)
         ->name('roles.index')
         ->middleware('can:list role'); // control de permiso Spatie
 
-Route::get('permissions', PermissionIndex::class)
-    ->middleware('auth')
-    ->name('permissions.index');
-    
+    Route::get('permissions', PermissionIndex::class)
+        ->name('permissions.index');
+
     // Rutas de configuración con Volt
     Volt::route('settings/profile', 'settings.profile')->name('profile.edit');
     Volt::route('settings/password', 'settings.password')->name('password.edit');
