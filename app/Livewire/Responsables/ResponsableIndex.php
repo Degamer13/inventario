@@ -61,11 +61,7 @@ class ResponsableIndex extends Component
         $this->modalFormVisible = false;
         $this->resetInput();
 
-        $this->dispatchBrowserEvent('swal', [
-            'title' => '¡Registro creado!',
-            'text' => 'El responsable se ha registrado correctamente.',
-            'icon' => 'success'
-        ]);
+        // Notificación removida (antes se usaba swal)
     }
 
     // Editar responsable
@@ -95,11 +91,7 @@ class ResponsableIndex extends Component
         $this->modalFormVisible = false;
         $this->resetInput();
 
-        $this->dispatchBrowserEvent('swal', [
-            'title' => '¡Registro actualizado!',
-            'text' => 'El responsable se ha actualizado correctamente.',
-            'icon' => 'success'
-        ]);
+        // Notificación removida (antes se usaba swal)
     }
 
     // Ver responsable
@@ -134,11 +126,7 @@ class ResponsableIndex extends Component
         $this->modalConfirmDelete = false;
         $this->resetInput();
 
-        $this->dispatchBrowserEvent('swal', [
-            'title' => '¡Registro eliminado!',
-            'text' => 'El responsable se ha eliminado correctamente.',
-            'icon' => 'success'
-        ]);
+        // Notificación removida (antes se usaba swal)
     }
 
     // Datos para guardar/actualizar
