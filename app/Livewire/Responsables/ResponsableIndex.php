@@ -5,6 +5,8 @@ namespace App\Livewire\Responsables;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Responsable;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class ResponsableIndex extends Component
 {
@@ -129,6 +131,37 @@ class ResponsableIndex extends Component
         // Notificación removida (antes se usaba swal)
     }
 
+    // Método para exportar a PDF
+    public function exportPdf()
+    {
+        if (!auth()->user()->can('pdf responsable')) abort(403);
+
+        $query = Responsable::query();
+        if ($this->search) {
+            $query->where(function($q){
+                $q->where('name', 'like', '%' . $this->search . '%')
+                    ->orWhere('cedula', 'like', '%' . $this->search . '%');
+            });
+        }
+        $responsables = $query->orderBy('id','desc')->get();
+
+        $options = new Options();
+        $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('isHtml5ParserEnabled', true);
+        $dompdf = new Dompdf($options);
+
+        $html = view('pdf.responsables-list', compact('responsables'))->render();
+
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        return response()->streamDownload(function () use ($dompdf) {
+            echo $dompdf->output();
+        }, 'responsables.pdf');
+    }
+
+
     // Datos para guardar/actualizar
     private function modelData()
     {
@@ -157,7 +190,7 @@ class ResponsableIndex extends Component
         if ($this->search) {
             $query->where(function($q){
                 $q->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhere('cedula', 'like', '%' . $this->search . '%');
+                    ->orWhere('cedula', 'like', '%' . $this->search . '%');
             });
         }
 
