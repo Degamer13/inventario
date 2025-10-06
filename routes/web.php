@@ -6,7 +6,11 @@ use App\Livewire\Users\UserIndex;
 use App\Livewire\Role\RoleIndex;
 use App\Livewire\Permission\PermissionIndex;
 use App\Livewire\Responsables\ResponsableIndex;
-
+use App\Livewire\Materiales\MaterialIndex;
+use App\Livewire\Facilidades\FacilidadIndex;
+use App\Livewire\MaquinariasFijas\MaquinariaFijaIndex;
+use App\Livewire\Sistemas\SistemaIndex;
+use App\Livewire\Vehiculos\VehiculoIndex;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -41,6 +45,21 @@ Route::middleware(['auth'])->group(function () {
     // Rutas de responsables (Livewire clásico)
     Route::get('responsables', ResponsableIndex::class)
         ->name('responsables.index'); // permiso se controla dentro del componente
+  // Rutas de Materiales
+    Route::get('materiales', MaterialIndex::class)
+        ->name('materiales.index'); // permisos se controlan dentro del componente
+  // Rutas de Facilidades
+    Route::get('facilidades', FacilidadIndex::class)
+        ->name('facilidades.index'); // permisos se controlan dentro del componente
+    // Rutas de Maquinarias Fijas
+    Route::get('maquinarias-fijas', MaquinariaFijaIndex::class)
+        ->name('maquinarias-fijas.index'); // permisos se controlan dentro del componente
+    // Rutas de Sistemas
+    Route::get('sistemas', SistemaIndex::class)
+        ->name('sistemas.index'); // permisos se controlan dentro del componente
+    // Rutas de Vehículos
+    Route::get('vehiculos', VehiculoIndex::class)
+        ->name('vehiculos.index'); // permisos se controlan dentro del componente
 
     // Rutas de Roles (Livewire clásico)
     Route::get('roles', RoleIndex::class)

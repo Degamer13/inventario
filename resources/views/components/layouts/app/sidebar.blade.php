@@ -41,6 +41,36 @@
                             {{ __('Responsables') }}
                         </flux:navlist.item>
                     @endcan
+<flux:navlist.group :heading="__('Inventario')">
+    @can('list material')
+        <flux:navlist.item icon="cube" :href="route('materiales.index')" :current="request()->routeIs('materiales.index')" wire:navigate>
+            {{ __('Materiales') }}
+        </flux:navlist.item>
+    @endcan
+
+    @can('list facilidad')
+        <flux:navlist.item icon="building-office" :href="route('facilidades.index')" :current="request()->routeIs('facilidades.index')" wire:navigate>
+            {{ __('Facilidades') }}
+        </flux:navlist.item>
+    @endcan
+
+    @can('list maquinaria-fija')
+        <flux:navlist.item icon="cog" :href="route('maquinarias-fijas.index')" :current="request()->routeIs('maquinarias-fijas.index')" wire:navigate>
+            {{ __('Maquinarias Fijas') }}
+        </flux:navlist.item>
+    @endcan
+     @can('list sistema')
+        <flux:navlist.item icon="laptop" :href="route('sistemas.index')" :current="request()->routeIs('sistemas.index')" wire:navigate>
+            {{ __('Sistemas') }}
+        </flux:navlist.item>
+    @endcan
+    @can('list vehiculo')
+        <flux:navlist.item icon="truck" :href="route('vehiculos.index')" :current="request()->routeIs('vehiculos.index')" wire:navigate>
+            {{ __('Vehículos') }}
+        </flux:navlist.item>
+
+    @endcan
+</flux:navlist.group>
 
 
                 </flux:navlist.group>
