@@ -7,9 +7,13 @@
         <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
-            <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
-                <x-app-logo />
-            </a>
+          <a href="{{ route('dashboard') }}" class="me-5 flex items-center rtl:space-x-reverse" wire:navigate>
+    <!-- Icono de tuerca -->
+    <flux:icon name="cog" class="h-8 w-8 text-blue-600" />
+
+    <!-- Texto al lado del icono -->
+    <span class="ml-2 text-2xl font-bold text-gray-800 dark:text-gray-100">FAB & WELD</span>
+</a>
 
             {{-- Sidebar desktop --}}
             <flux:navlist variant="outline">
