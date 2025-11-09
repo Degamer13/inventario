@@ -18,6 +18,7 @@ class FacilidadIndex extends Component
     public $modalFormVisible = false;
     public $modalViewVisible = false;
     public $modalConfirmDelete = false;
+    public $message = ''; // Para la alerta
 
     protected $paginationTheme = 'tailwind';
 
@@ -30,10 +31,10 @@ class FacilidadIndex extends Component
     {
         return [
             'descripcion' => 'required|string|max:255',
-            'serial' => 'nullable|string|max:255',
-            'marca' => 'nullable|string|max:255',
+            'serial' => 'required|string|max:255|unique:facilidades,serial,' . $this->facilidad_id,
+            'marca' => 'required|string|max:255',
             'cantidad' => 'required|integer|min:0',
-            'ubicacion' => 'nullable|string|max:255',
+            'ubicacion' => 'required|string|max:255',
         ];
     }
 
@@ -51,6 +52,9 @@ class FacilidadIndex extends Component
         Facilidad::updateOrCreate(['id' => $this->facilidad_id], $this->modelData());
         $this->modalFormVisible = false;
         $this->resetInput();
+
+        // Mensaje de éxito
+        $this->message = 'Facilidad guardada correctamente.';
     }
 
     // Editar facilidad
@@ -76,6 +80,9 @@ class FacilidadIndex extends Component
         Facilidad::findOrFail($this->facilidad_id)->update($this->modelData());
         $this->modalFormVisible = false;
         $this->resetInput();
+
+        // Mensaje de éxito
+        $this->message = 'Facilidad actualizada correctamente.';
     }
 
     // Ver facilidad
@@ -105,6 +112,9 @@ class FacilidadIndex extends Component
         Facilidad::destroy($this->facilidad_id);
         $this->modalConfirmDelete = false;
         $this->resetInput();
+
+        // Mensaje de éxito
+        $this->message = 'Facilidad eliminada correctamente.';
     }
 
     // Exportar PDF
@@ -172,7 +182,8 @@ class FacilidadIndex extends Component
         $facilidades = $query->orderBy('id','desc')->paginate(5);
 
         return view('livewire.facilidades.facilidad-index', [
-            'facilidades' => $facilidades
+            'facilidades' => $facilidades,
+            'message' => $this->message, // Pasar el mensaje a la vista
         ]);
     }
 }

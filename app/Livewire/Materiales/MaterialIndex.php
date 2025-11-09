@@ -30,11 +30,11 @@ class MaterialIndex extends Component
     {
         return [
             'descripcion' => 'required|string|max:255',
-            'serial' => 'nullable|string|max:255',
-            'marca' => 'nullable|string|max:255',
+           'serial' => 'required|string|max:255|unique:materiales,serial,' . $this->material_id,
+            'marca' => 'required|string|max:255',
             'cantidad' => 'required|integer|min:0',
-            'unidad_medida' => 'nullable|string|max:255',
-            'ubicacion' => 'nullable|string|max:255',
+            'unidad_medida' => 'required|string|max:255',
+            'ubicacion' => 'required|string|max:255',
         ];
     }
 
@@ -50,6 +50,9 @@ class MaterialIndex extends Component
         Material::updateOrCreate(['id' => $this->material_id], $this->modelData());
         $this->modalFormVisible = false;
         $this->resetInput();
+
+        // Alerta de éxito con el formato que estamos usando
+        session()->flash('message', 'Material guardado correctamente.');
     }
 
     public function edit($id)
@@ -74,6 +77,9 @@ class MaterialIndex extends Component
         Material::findOrFail($this->material_id)->update($this->modelData());
         $this->modalFormVisible = false;
         $this->resetInput();
+
+        // Alerta de éxito con el formato que estamos usando
+        session()->flash('message', 'Material actualizado correctamente.');
     }
 
     public function view($id)
@@ -101,6 +107,9 @@ class MaterialIndex extends Component
         Material::destroy($this->material_id);
         $this->modalConfirmDelete = false;
         $this->resetInput();
+
+        // Alerta de éxito con el formato que estamos usando
+        session()->flash('message', 'Material eliminado correctamente.');
     }
 
     // Exportar PDF

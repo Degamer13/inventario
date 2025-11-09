@@ -18,6 +18,7 @@ class SistemaIndex extends Component
     public $modalFormVisible = false;
     public $modalViewVisible = false;
     public $modalConfirmDelete = false;
+    public $message = ''; // Para almacenar el mensaje de éxito
 
     protected $paginationTheme = 'tailwind';
 
@@ -30,10 +31,10 @@ class SistemaIndex extends Component
     {
         return [
             'descripcion' => 'required|string|max:255',
-            'serial' => 'nullable|string|max:255',
-            'marca' => 'nullable|string|max:255',
+            'serial' => 'required|string|max:255|unique:sistemas,serial,' . $this->sistema_id,
+            'marca' => 'required|string|max:255',
             'cantidad' => 'required|integer|min:0',
-            'ubicacion' => 'nullable|string|max:255',
+            'ubicacion' => 'required|string|max:255',
         ];
     }
 
@@ -51,6 +52,9 @@ class SistemaIndex extends Component
         Sistema::updateOrCreate(['id' => $this->sistema_id], $this->modelData());
         $this->modalFormVisible = false;
         $this->resetInput();
+
+        // Mensaje de éxito
+        $this->message = 'Sistema guardado correctamente.';
     }
 
     // Editar sistema
@@ -76,6 +80,9 @@ class SistemaIndex extends Component
         Sistema::findOrFail($this->sistema_id)->update($this->modelData());
         $this->modalFormVisible = false;
         $this->resetInput();
+
+        // Mensaje de éxito
+        $this->message = 'Sistema actualizado correctamente.';
     }
 
     // Ver sistema
@@ -105,6 +112,9 @@ class SistemaIndex extends Component
         Sistema::destroy($this->sistema_id);
         $this->modalConfirmDelete = false;
         $this->resetInput();
+
+        // Mensaje de éxito
+        $this->message = 'Sistema eliminado correctamente.';
     }
 
     // Exportar PDF
@@ -172,7 +182,8 @@ class SistemaIndex extends Component
         $sistemas = $query->orderBy('id','desc')->paginate(5);
 
         return view('livewire.sistemas.sistema-index', [
-            'sistemas' => $sistemas
+            'sistemas' => $sistemas,
+            'message' => $this->message, // Pasar el mensaje a la vista
         ]);
     }
 }

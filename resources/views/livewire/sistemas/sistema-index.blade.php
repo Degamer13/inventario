@@ -44,6 +44,17 @@
     </div>
 
     {{-- Tabla --}}
+      {{-- Alerta de éxito --}}
+    @if ($message)
+        <div id="alert-message" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg mb-4 max-w-xs flex items-center justify-between">
+            <p>{{ $message }}</p>
+            <button onclick="document.getElementById('alert-message').style.display = 'none';" class="ml-4 bg-transparent text-white font-semibold hover:text-gray-200 focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    @endif
     <div class="overflow-x-auto rounded shadow bg-white dark:bg-neutral-900">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
             <thead class="bg-gray-100 dark:bg-neutral-950">
@@ -119,16 +130,35 @@
 
     {{-- Modal Crear/Editar --}}
     @if($modalFormVisible)
-    <div class="fixed inset-0 flex items-center justify-center z-50">
+     <div class="fixed inset-0 flex items-center justify-center z-50">
         <div class="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70"></div>
-        <div class="rounded shadow-lg p-6 w-full max-w-lg z-10 bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100">
+        <div class="rounded shadow-lg p-6 w-full max-w-lg z-10 bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 max-h-[80vh] overflow-y-auto">
             <h2 class="text-lg font-bold mb-4">{{ $sistema_id ? 'Editar Sistema' : 'Nuevo Sistema' }}</h2>
             <div class="space-y-3">
+                <label class="block font-medium">Descripción  <span class="text-red-500">*</span></label>
                 <input type="text" wire:model="descripcion" placeholder="Descripción" class="w-full border border-gray-300 dark:border-neutral-700 rounded px-3 py-2 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
+                @error('descripcion') <span class="text-red-500 text-sm">Campo requerido</span>
+                @enderror
+                <label class="block font-medium">Serial<span class="text-red-500">*</span></label>
                 <input type="text" wire:model="serial" placeholder="Serial" class="w-full border border-gray-300 dark:border-neutral-700 rounded px-3 py-2 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
+                @error('serial')
+                    <span class="text-red-500 text-sm">Campo requerido</span>
+                @enderror
+                <label class="block font-medium">Marca<span class="text-red-500">*</span></label>
                 <input type="text" wire:model="marca" placeholder="Marca" class="w-full border border-gray-300 dark:border-neutral-700 rounded px-3 py-2 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
+                @error('marca')
+                    <span class="text-red-500 text-sm">Campo requerido</span>
+                @enderror
+                <label class="block font-medium">Cantidad<span class="text-red-500">*</span></label>
                 <input type="number" wire:model="cantidad" placeholder="Cantidad" class="w-full border border-gray-300 dark:border-neutral-700 rounded px-3 py-2 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
+                @error('cantidad')
+                    <span class="text-red-500 text-sm">Campo requerido</span>
+                @enderror
+                <label class="block font-medium">Ubicación<span class="text-red-500">*</span></label>
                 <input type="text" wire:model="ubicacion" placeholder="Ubicación" class="w-full border border-gray-300 dark:border-neutral-700 rounded px-3 py-2 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
+                @error('ubicacion')
+                    <span class="text-red-500 text-sm">Campo requerido</span>
+                @enderror
             </div>
             <div class="mt-4 flex justify-end space-x-2">
                 <button wire:click="$set('modalFormVisible', false)" class="px-4 py-2 bg-gray-300 dark:bg-neutral-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-neutral-500">Cancelar</button>

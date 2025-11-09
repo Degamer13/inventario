@@ -77,9 +77,9 @@
 
     {{-- Modal Crear/Editar --}}
     @if($modalFormVisible)
-        <div class="fixed inset-0 flex items-center justify-center z-50">
-            <div class="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70"></div>
-            <div class="rounded shadow-lg p-6 w-full max-w-lg z-10 bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100">
+      <div class="fixed inset-0 flex items-center justify-center z-50">
+        <div class="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70"></div>
+        <div class="rounded shadow-lg p-6 w-full max-w-lg z-10 bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 max-h-[80vh] overflow-y-auto">
                 <h2 class="text-lg font-bold mb-4">{{ $permission_id ? 'Editar Permiso' : 'Nuevo Permiso' }}</h2>
 
                 <div class="space-y-3">

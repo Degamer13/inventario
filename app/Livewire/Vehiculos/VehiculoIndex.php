@@ -18,6 +18,7 @@ class VehiculoIndex extends Component
     public $modalFormVisible = false;
     public $modalViewVisible = false;
     public $modalConfirmDelete = false;
+    public $message = ''; // Propiedad para almacenar el mensaje de éxito
 
     protected $paginationTheme = 'tailwind';
 
@@ -30,14 +31,14 @@ class VehiculoIndex extends Component
     {
         return [
             'descripcion' => 'required|string|max:255',
-            'tipo' => 'nullable|string|max:255',
-            'marca' => 'nullable|string|max:255',
-            'observacion' => 'nullable|string|max:255',
-            'placa' => 'nullable|string|max:255',
-            'ano' => 'nullable|integer|min:1900|max:' . date('Y'),
-            'color' => 'nullable|string|max:255',
-            'bateria' => 'nullable|string|max:255',
-            'ubicacion' => 'nullable|string|max:255',
+            'tipo' => 'required|string|max:255',
+            'marca' => 'required|string|max:255',
+            'observacion' => 'required|string|max:255',
+            'placa' => 'required|string|max:255|unique:vehiculos,placa,' . $this->vehiculo_id,
+            'ano' => 'required|integer|min:1900|max:' . date('Y'),
+            'color' => 'required|string|max:255',
+            'bateria' => 'required|string|max:255',
+            'ubicacion' => 'required|string|max:255',
         ];
     }
 
@@ -55,6 +56,9 @@ class VehiculoIndex extends Component
         Vehiculo::updateOrCreate(['id' => $this->vehiculo_id], $this->modelData());
         $this->modalFormVisible = false;
         $this->resetInput();
+
+        // Mensaje de éxito
+        $this->message = 'Vehículo guardado correctamente.';
     }
 
     // Editar vehículo
@@ -84,6 +88,9 @@ class VehiculoIndex extends Component
         Vehiculo::findOrFail($this->vehiculo_id)->update($this->modelData());
         $this->modalFormVisible = false;
         $this->resetInput();
+
+        // Mensaje de éxito
+        $this->message = 'Vehículo actualizado correctamente.';
     }
 
     // Ver vehículo
@@ -117,6 +124,9 @@ class VehiculoIndex extends Component
         Vehiculo::destroy($this->vehiculo_id);
         $this->modalConfirmDelete = false;
         $this->resetInput();
+
+        // Mensaje de éxito
+        $this->message = 'Vehículo eliminado correctamente.';
     }
 
     // Exportar PDF
@@ -188,7 +198,8 @@ class VehiculoIndex extends Component
         $vehiculos = $query->orderBy('id','desc')->paginate(5);
 
         return view('livewire.vehiculos.vehiculo-index', [
-            'vehiculos' => $vehiculos
+            'vehiculos' => $vehiculos,
+            'message' => $this->message, // Pasar el mensaje a la vista
         ]);
     }
 }

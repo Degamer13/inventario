@@ -18,6 +18,7 @@ class MaquinariaFijaIndex extends Component
     public $modalFormVisible = false;
     public $modalViewVisible = false;
     public $modalConfirmDelete = false;
+    public $message = ''; // Para mostrar mensajes de éxito
 
     protected $paginationTheme = 'tailwind';
 
@@ -30,13 +31,13 @@ class MaquinariaFijaIndex extends Component
     {
         return [
             'descripcion' => 'required|string|max:255',
-            'modelo'      => 'nullable|string|max:255',
-            'color'       => 'nullable|string|max:255',
-            'marca'       => 'nullable|string|max:255',
-            'serial'      => 'nullable|string|max:255',
-            'codigo'      => 'nullable|string|max:255',
+            'modelo'      => 'required|string|max:255',
+            'color'       => 'required|string|max:255',
+            'marca'       => 'required|string|max:255',
+           'serial' => 'required|string|max:255|unique:maquinarias_fijas,serial,' . $this->maquinaria_fija_id,
+            'codigo'      => 'required|string|max:255|unique:maquinarias_fijas,codigo,' . $this->maquinaria_fija_id,
             'cantidad'    => 'required|integer|min:0',
-            'ubicacion'   => 'nullable|string|max:255',
+            'ubicacion'   => 'required|string|max:255',
         ];
     }
 
@@ -54,6 +55,9 @@ class MaquinariaFijaIndex extends Component
         MaquinariaFija::updateOrCreate(['id' => $this->maquinaria_fija_id], $this->modelData());
         $this->modalFormVisible = false;
         $this->resetInput();
+
+        // Mensaje de éxito
+        $this->message = 'Maquinaria fija guardada correctamente.';
     }
 
     // Editar
@@ -82,6 +86,9 @@ class MaquinariaFijaIndex extends Component
         MaquinariaFija::findOrFail($this->maquinaria_fija_id)->update($this->modelData());
         $this->modalFormVisible = false;
         $this->resetInput();
+
+        // Mensaje de éxito
+        $this->message = 'Maquinaria fija actualizada correctamente.';
     }
 
     // Ver
@@ -114,6 +121,9 @@ class MaquinariaFijaIndex extends Component
         MaquinariaFija::destroy($this->maquinaria_fija_id);
         $this->modalConfirmDelete = false;
         $this->resetInput();
+
+        // Mensaje de éxito
+        $this->message = 'Maquinaria fija eliminada correctamente.';
     }
 
     // Exportar PDF
@@ -190,7 +200,8 @@ class MaquinariaFijaIndex extends Component
         $maquinarias = $query->orderBy('id','desc')->paginate(5);
 
         return view('livewire.maquinarias-fijas.maquinaria-fija-index', [
-            'maquinarias' => $maquinarias
+            'maquinarias' => $maquinarias,
+            'message' => $this->message, // Pasar el mensaje a la vista
         ]);
     }
 }
