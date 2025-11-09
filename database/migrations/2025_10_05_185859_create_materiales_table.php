@@ -9,11 +9,11 @@ return new class extends Migration {
         Schema::create('materiales', function (Blueprint $table) {
             $table->id();
             $table->string('descripcion');
-            $table->string('serial')->nullable();
-            $table->string('marca')->nullable();
-            $table->integer('cantidad')->default(0);
-            $table->string('unidad_medida')->nullable();
-            $table->string('ubicacion')->nullable();
+            $table->string('serial')->unique();
+            $table->string('marca');
+            $table->integer('cantidad');
+            $table->string('unidad_medida');
+            $table->string('ubicacion');
             $table->timestamps();
         });
     }

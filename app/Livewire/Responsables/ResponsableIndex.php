@@ -30,10 +30,10 @@ class ResponsableIndex extends Component
     protected function rules()
     {
         return [
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:responsables,name,' . $this->responsable_id,
             'cedula' => 'required|string|max:20|unique:responsables,cedula,' . $this->responsable_id,
-            'email' => 'required|email|unique:responsables,email,' . $this->responsable_id,
-            'telefono' => 'nullable|string|max:50',
+            'email' => 'nullable|email|unique:responsables,email,' . $this->responsable_id,
+            'telefono' => 'nullable|string|max:50|unique:responsables,telefono,' . $this->responsable_id,
             'cargo' => 'nullable|string|max:255',
             'area' => 'nullable|string|max:255',
         ];
@@ -59,11 +59,12 @@ class ResponsableIndex extends Component
     {
         if (!auth()->user()->can('create responsable')) abort(403);
         $this->validate();
+
         Responsable::create($this->modelData());
         $this->modalFormVisible = false;
         $this->resetInput();
 
-        // Notificación removida (antes se usaba swal)
+        session()->flash('message', 'Responsable creado correctamente.');
     }
 
     // Editar responsable
@@ -89,11 +90,12 @@ class ResponsableIndex extends Component
     {
         if (!auth()->user()->can('edit responsable')) abort(403);
         $this->validate();
+
         Responsable::findOrFail($this->responsable_id)->update($this->modelData());
         $this->modalFormVisible = false;
         $this->resetInput();
 
-        // Notificación removida (antes se usaba swal)
+        session()->flash('message', 'Responsable actualizado correctamente.');
     }
 
     // Ver responsable
@@ -128,7 +130,7 @@ class ResponsableIndex extends Component
         $this->modalConfirmDelete = false;
         $this->resetInput();
 
-        // Notificación removida (antes se usaba swal)
+        session()->flash('message', 'Responsable eliminado correctamente.');
     }
 
     // Método para exportar a PDF
@@ -161,7 +163,6 @@ class ResponsableIndex extends Component
         }, 'responsables.pdf');
     }
 
-
     // Datos para guardar/actualizar
     private function modelData()
     {
@@ -178,7 +179,7 @@ class ResponsableIndex extends Component
     // Reset inputs
     private function resetInput()
     {
-        $this->reset(['name','cedula','email','telefono','cargo','area','responsable_id']);
+        $this->reset(['name', 'cedula', 'email', 'telefono', 'cargo', 'area', 'responsable_id']);
         $this->resetValidation();
     }
 

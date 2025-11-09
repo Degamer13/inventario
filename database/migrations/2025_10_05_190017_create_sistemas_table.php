@@ -9,10 +9,10 @@ return new class extends Migration {
         Schema::create('sistemas', function (Blueprint $table) {
             $table->id();
             $table->string('descripcion');
-            $table->string('serial')->nullable();
-            $table->string('marca')->nullable();
-            $table->integer('cantidad')->default(0);
-            $table->string('ubicacion')->nullable();
+            $table->string('serial')->unique();
+            $table->string('marca');
+            $table->integer('cantidad');
+            $table->string('ubicacion');
             $table->timestamps();
         });
     }

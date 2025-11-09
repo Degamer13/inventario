@@ -11,19 +11,15 @@ use App\Livewire\Facilidades\FacilidadIndex;
 use App\Livewire\MaquinariasFijas\MaquinariaFijaIndex;
 use App\Livewire\Sistemas\SistemaIndex;
 use App\Livewire\Vehiculos\VehiculoIndex;
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
+use App\Livewire\Salidas\SalidaIndex; // Componente de Salidas
 
+// [ ... Rutas Públicas y Redirecciones ... ]
 Route::get('/', function () {
     return auth()->check()
         ? redirect()->route('dashboard')
         : redirect()->route('login');
 });
 
-// Redirección para compatibilidad con Laravel Breeze/Jetstream
 Route::get('/home', function () {
     return redirect()->route('dashboard');
 })->name('home');
@@ -42,29 +38,34 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('can:list user') // permisos Spatie
         ->name('users.index');
 
-    // Rutas de responsables (Livewire clásico)
+    // Rutas de responsables
     Route::get('responsables', ResponsableIndex::class)
-        ->name('responsables.index'); // permiso se controla dentro del componente
-  // Rutas de Materiales
-    Route::get('materiales', MaterialIndex::class)
-        ->name('materiales.index'); // permisos se controlan dentro del componente
-  // Rutas de Facilidades
-    Route::get('facilidades', FacilidadIndex::class)
-        ->name('facilidades.index'); // permisos se controlan dentro del componente
-    // Rutas de Maquinarias Fijas
-    Route::get('maquinarias-fijas', MaquinariaFijaIndex::class)
-        ->name('maquinarias-fijas.index'); // permisos se controlan dentro del componente
-    // Rutas de Sistemas
-    Route::get('sistemas', SistemaIndex::class)
-        ->name('sistemas.index'); // permisos se controlan dentro del componente
-    // Rutas de Vehículos
-    Route::get('vehiculos', VehiculoIndex::class)
-        ->name('vehiculos.index'); // permisos se controlan dentro del componente
+        ->name('responsables.index');
 
-    // Rutas de Roles (Livewire clásico)
+    // Rutas de Inventario
+    Route::get('materiales', MaterialIndex::class)
+        ->name('materiales.index');
+
+    Route::get('facilidades', FacilidadIndex::class)
+        ->name('facilidades.index');
+
+    Route::get('maquinarias-fijas', MaquinariaFijaIndex::class)
+        ->name('maquinarias-fijas.index');
+
+    Route::get('sistemas', SistemaIndex::class)
+        ->name('sistemas.index');
+
+    Route::get('vehiculos', VehiculoIndex::class)
+        ->name('vehiculos.index');
+
+    // Rutas de SALIDAS (VERIFICADA LA SINTAXIS)
+    Route::get('salidas', SalidaIndex::class)
+        ->name('salidas.index');
+
+    // Rutas de Roles y Permisos
     Route::get('roles', RoleIndex::class)
         ->name('roles.index')
-        ->middleware('can:list role'); // control de permiso Spatie
+        ->middleware('can:list role');
 
     Route::get('permissions', PermissionIndex::class)
         ->name('permissions.index');

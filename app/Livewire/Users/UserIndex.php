@@ -20,6 +20,7 @@ class UserIndex extends Component
     public $modalViewVisible = false;
     public $modalConfirmDelete = false;
 
+    public $message = ''; // Para mostrar alertas de éxito o error
     protected $paginationTheme = 'tailwind';
 
     // 🔹 Resetear paginación al actualizar el buscador
@@ -31,12 +32,17 @@ class UserIndex extends Component
     protected function rules()
     {
         return [
-            'name' => 'required|string|max:255',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('users', 'name')->ignore($this->user_id), // Validación de nombre único
+            ],
             'email' => [
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('users','email')->ignore($this->user_id)
+                Rule::unique('users', 'email')->ignore($this->user_id) // Validación de correo único
             ],
             'password' => $this->user_id
                 ? 'nullable|string|min:6|confirmed'
@@ -67,11 +73,7 @@ class UserIndex extends Component
         $this->modalFormVisible = false;
         $this->resetInput();
 
-        $this->dispatch('swal', [
-            'title' => '¡Usuario creado!',
-            'text' => 'El usuario se ha registrado correctamente.',
-            'icon' => 'success'
-        ]);
+        $this->message = 'Usuario registrado correctamente.'; // Mensaje de éxito
     }
 
     public function edit($id)
@@ -110,11 +112,7 @@ class UserIndex extends Component
         $this->modalFormVisible = false;
         $this->resetInput();
 
-        $this->dispatch('swal', [
-            'title' => '¡Usuario actualizado!',
-            'text' => 'El usuario se ha actualizado correctamente.',
-            'icon' => 'success'
-        ]);
+        $this->message = 'Usuario actualizado correctamente.'; // Mensaje de éxito
     }
 
     public function view($id)
@@ -140,16 +138,12 @@ class UserIndex extends Component
         $this->modalConfirmDelete = false;
         $this->resetInput();
 
-        $this->dispatch('swal', [
-            'title' => '¡Usuario eliminado!',
-            'text' => 'El usuario se ha eliminado correctamente.',
-            'icon' => 'success'
-        ]);
+        $this->message = 'Usuario eliminado correctamente.'; // Mensaje de éxito
     }
 
     private function resetInput()
     {
-        $this->reset(['name','email','password','password_confirmation','roles','user_id']);
+        $this->reset(['name', 'email', 'password', 'password_confirmation', 'roles', 'user_id']);
         $this->resetValidation();
     }
 
@@ -158,14 +152,14 @@ class UserIndex extends Component
         $query = User::with('roles');
 
         if ($this->search) {
-            $query->where(function($q){
-                $q->where('name','like','%' . $this->search . '%')
-                  ->orWhere('email','like','%' . $this->search . '%');
+            $query->where(function ($q) {
+                $q->where('name', 'like', '%' . $this->search . '%')
+                    ->orWhere('email', 'like', '%' . $this->search . '%');
             });
         }
 
         return view('livewire.users.user-index', [
-            'users' => $query->orderBy('id','desc')->paginate(5),
+            'users' => $query->orderBy('id', 'desc')->paginate(5),
             'allRoles' => Role::pluck('name')->toArray(),
         ]);
     }

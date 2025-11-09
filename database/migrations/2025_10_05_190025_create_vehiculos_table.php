@@ -9,14 +9,14 @@ return new class extends Migration {
         Schema::create('vehiculos', function (Blueprint $table) {
             $table->id();
             $table->string('descripcion');
-            $table->string('tipo')->nullable();
-            $table->string('marca')->nullable();
-            $table->string('observacion')->nullable();
-            $table->string('placa')->nullable();
-            $table->integer('ano')->nullable();
-            $table->string('color')->nullable();
-            $table->string('bateria')->nullable();
-            $table->string('ubicacion')->nullable();
+            $table->string('tipo');
+            $table->string('marca');
+            $table->string('observacion');
+            $table->string('placa')->unique();
+            $table->integer('ano');
+            $table->string('color');
+            $table->string('bateria');
+            $table->string('ubicacion');
             $table->timestamps();
         });
     }

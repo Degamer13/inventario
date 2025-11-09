@@ -5,9 +5,11 @@
         <div class="flex w-full md:w-1/2 space-x-2">
             <input type="text" wire:model="search" placeholder="Buscar por nombre..."
                 class="w-full rounded border border-gray-300 dark:border-neutral-700 focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-500 dark:focus:border-indigo-400 px-3 py-2 bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100"/>
-            <button wire:click="$refresh" class="flex items-center px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 dark:hover:bg-gray-700">      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button wire:click="$refresh" class="flex items-center px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 dark:hover:bg-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M16.65 16.65a7.5 7.5 0 111.414-1.414l4.35 4.35z" />
-                </svg>Buscar</button>
+                </svg>Buscar
+            </button>
         </div>
         @can('create role')
             <button wire:click="create" class="flex items-center px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 dark:hover:bg-indigo-500 md:ml-2">
@@ -18,13 +20,25 @@
         @endcan
     </div>
 
+
+
     {{-- Tabla de Roles --}}
+        {{-- Mensaje de éxito o error --}}
+    @if (session()->has('message'))
+        <div id="alert-message" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg mb-4 max-w-xs flex items-center justify-between">
+            <p>{{ session('message') }}</p>
+            <button onclick="document.getElementById('alert-message').style.display = 'none';" class="ml-4 bg-transparent text-white font-semibold hover:text-gray-200 focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    @endif
     <div class="overflow-x-auto rounded shadow bg-white dark:bg-neutral-900">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
             <thead class="bg-gray-100 dark:bg-neutral-950">
                 <tr>
                     <th class="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-200 uppercase">Rol</th>
-
                     <th class="px-4 py-2 text-right">Acciones</th>
                 </tr>
             </thead>
@@ -32,24 +46,29 @@
                 @forelse($roles as $role)
                     <tr class="bg-white dark:bg-neutral-900 hover:bg-gray-50 dark:hover:bg-neutral-800">
                         <td class="px-4 py-2">{{ $role->name }}</td>
-
                         <td class="px-4 py-2 text-right">
                             <div class="flex justify-end space-x-1">
                                 @can('show role')
-                                    <button wire:click="view({{ $role->id }})" class="inline-flex items-center px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <button wire:click="view({{ $role->id }})" class="inline-flex items-center px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg></button>
+                                        </svg>
+                                    </button>
                                 @endcan
                                 @can('edit role')
-                                    <button wire:click="edit({{ $role->id }})" class="inline-flex items-center px-2 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <button wire:click="edit({{ $role->id }})" class="inline-flex items-center px-2 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 11l6-6 3 3-6 6H9v-3z" />
-                                        </svg></button>
+                                        </svg>
+                                    </button>
                                 @endcan
                                 @can('delete role')
-                                    <button wire:click="confirmDelete({{ $role->id }})" class="inline-flex items-center px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <button wire:click="confirmDelete({{ $role->id }})" class="inline-flex items-center px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg></button>
+                                        </svg>
+                                    </button>
                                 @endcan
                             </div>
                         </td>
@@ -73,14 +92,24 @@
             <div class="rounded shadow-lg p-6 w-full max-w-lg z-10 bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100">
                 <h2 class="text-lg font-bold mb-4">{{ $role_id ? 'Editar Rol' : 'Nuevo Rol' }}</h2>
                 <div class="space-y-3">
-                    <input type="text" wire:model="name" placeholder="Nombre del rol" class="w-full border border-gray-300 dark:border-neutral-700 rounded px-3 py-2 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
                     <div>
-                        <label class="block mb-1 font-medium text-gray-700 dark:text-gray-200">Permisos</label>
+                        <label class="block mb-1 font-medium text-gray-700 dark:text-gray-200">Nombre <span class="text-red-500">*</span></label>
+                        <input type="text" wire:model="name" placeholder="Nombre del rol" class="w-full border border-gray-300 dark:border-neutral-700 rounded px-3 py-2 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
+                        @error('name')
+                            <p class="text-red-500 text-sm mt-1">Campo requerido</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label class="block mb-1 font-medium text-gray-700 dark:text-gray-200">Permisos <span class="text-red-500">*</span></label>
                         <select wire:model="permissions" multiple class="w-full border border-gray-300 dark:border-neutral-700 rounded px-3 py-2 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
                             @foreach($allPermissions as $permission)
                                 <option value="{{ $permission }}">{{ $permission }}</option>
                             @endforeach
                         </select>
+                        @error('permissions')
+                            <p class="text-red-500 text-sm mt-1">Campo requerido</p>
+                        @enderror
                     </div>
                 </div>
                 <div class="mt-4 flex justify-end space-x-2">
@@ -126,16 +155,3 @@
     @endif
 
 </div>
-
-{{-- SweetAlert --}}
-<script>
-    document.addEventListener('livewire:load', function () {
-        Livewire.on('swal', e => {
-            Swal.fire({
-                title: e.title,
-                text: e.text,
-                icon: e.icon
-            });
-        });
-    });
-</script>

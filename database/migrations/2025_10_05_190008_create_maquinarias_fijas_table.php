@@ -8,13 +8,13 @@ return new class extends Migration {
         Schema::create('maquinarias_fijas', function (Blueprint $table) {
             $table->id();
             $table->string('descripcion');
-            $table->string('modelo')->nullable();
-            $table->string('color')->nullable();
-            $table->string('marca')->nullable();
-            $table->string('serial')->nullable();
-            $table->string('codigo')->nullable();
-            $table->integer('cantidad')->default(0);
-            $table->string('ubicacion')->nullable();
+            $table->string('modelo');
+            $table->string('color');
+            $table->string('marca');
+            $table->string('serial')->unique();
+            $table->string('codigo')->unique();
+            $table->integer('cantidad');
+            $table->string('ubicacion');
             $table->timestamps();
         });
     }

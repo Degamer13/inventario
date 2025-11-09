@@ -75,6 +75,10 @@
         </flux:navlist.item>
 
     @endcan
+
+        <flux:navlist.item  :href="route('salidas.index')" :current="request()->routeIs('salidas.index')" wire:navigate>
+            {{ __('Salidas') }}
+        </flux:navlist.item>
 </flux:navlist.group>
 
 

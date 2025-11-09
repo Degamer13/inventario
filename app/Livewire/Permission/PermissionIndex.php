@@ -26,10 +26,11 @@ class PermissionIndex extends Component
         $this->resetPage();
     }
 
+    // Reglas de validación
     protected function rules()
     {
         return [
-            'name' => ['required','string','max:255', Rule::unique('permissions','name')->ignore($this->permission_id)],
+            'name' => ['required', 'string', 'max:255', Rule::unique('permissions', 'name')->ignore($this->permission_id)],
         ];
     }
 
@@ -44,15 +45,13 @@ class PermissionIndex extends Component
     public function store()
     {
         $this->validate();
+
         Permission::create(['name' => $this->name]);
+
         $this->modalFormVisible = false;
         $this->resetInput();
 
-        $this->dispatch('swal', [
-            'title' => '¡Permiso creado!',
-            'text' => 'El permiso se ha registrado correctamente.',
-            'icon' => 'success'
-        ]);
+        session()->flash('message', 'Permiso creado correctamente.');
     }
 
     // Abrir modal para editar
@@ -72,16 +71,14 @@ class PermissionIndex extends Component
     public function update()
     {
         $this->validate();
+
         $permission = Permission::findOrFail($this->permission_id);
         $permission->update(['name' => $this->name]);
+
         $this->modalFormVisible = false;
         $this->resetInput();
 
-        $this->dispatch('swal', [
-            'title' => '¡Permiso actualizado!',
-            'text' => 'El permiso se ha actualizado correctamente.',
-            'icon' => 'success'
-        ]);
+        session()->flash('message', 'Permiso actualizado correctamente.');
     }
 
     // Ver permiso
@@ -106,19 +103,17 @@ class PermissionIndex extends Component
         $this->modalConfirmDelete = false;
         $this->resetInput();
 
-        $this->dispatch('swal', [
-            'title' => '¡Permiso eliminado!',
-            'text' => 'El permiso se ha eliminado correctamente.',
-            'icon' => 'success'
-        ]);
+        session()->flash('message', 'Permiso eliminado correctamente.');
     }
 
+    // Resetear los inputs
     private function resetInput()
     {
-        $this->reset(['name','permission_id']);
+        $this->reset(['name', 'permission_id']);
         $this->resetValidation();
     }
 
+    // Renderizar vista
     public function render()
     {
         $query = Permission::query();
@@ -128,7 +123,7 @@ class PermissionIndex extends Component
         }
 
         return view('livewire.permission.permission-index', [
-            'permissions' => $query->orderBy('id','desc')->paginate(5),
+            'permissions' => $query->orderBy('id', 'desc')->paginate(5),
         ]);
     }
 }

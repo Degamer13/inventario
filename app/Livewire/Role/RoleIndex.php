@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Validation\Rule;
 
-class RoleIndex  extends Component
+class RoleIndex extends Component
 {
     use WithPagination;
 
@@ -25,7 +25,12 @@ class RoleIndex  extends Component
     protected function rules()
     {
         return [
-            'name' => ['required','string','max:255', Rule::unique('roles','name')->ignore($this->role_id)],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('roles', 'name')->ignore($this->role_id), // Validación de nombre único
+            ],
             'permissions' => 'required|array|min:1',
             'permissions.*' => 'exists:permissions,name',
         ];
@@ -49,11 +54,7 @@ class RoleIndex  extends Component
         $this->modalFormVisible = false;
         $this->resetInput();
 
-        $this->dispatch('swal', [
-            'title' => '¡Rol creado!',
-            'text' => 'El rol se ha registrado correctamente.',
-            'icon' => 'success'
-        ]);
+        session()->flash('message', 'Rol creado correctamente.');
     }
 
     // Abrir modal para editar
@@ -83,11 +84,7 @@ class RoleIndex  extends Component
         $this->modalFormVisible = false;
         $this->resetInput();
 
-        $this->dispatch('swal', [
-            'title' => '¡Rol actualizado!',
-            'text' => 'El rol se ha actualizado correctamente.',
-            'icon' => 'success'
-        ]);
+        session()->flash('message', 'Rol actualizado correctamente.');
     }
 
     // Ver rol
@@ -115,11 +112,7 @@ class RoleIndex  extends Component
         $this->modalConfirmDelete = false;
         $this->resetInput();
 
-        $this->dispatch('swal', [
-            'title' => '¡Rol eliminado!',
-            'text' => 'El rol se ha eliminado correctamente.',
-            'icon' => 'success'
-        ]);
+        session()->flash('message', 'Rol eliminado correctamente.');
     }
 
     // Resetear inputs
@@ -138,9 +131,8 @@ class RoleIndex  extends Component
         }
 
         return view('livewire.roles.role-index', [
-            'roles' => $query->orderBy('id','desc')->paginate(5),
+            'roles' => $query->orderBy('id', 'desc')->paginate(5),
             'allPermissions' => Permission::pluck('name')->toArray(),
         ]);
     }
 }
-

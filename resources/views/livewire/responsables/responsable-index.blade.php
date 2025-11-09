@@ -42,6 +42,17 @@
     </div>
 
     {{-- Tabla --}}
+         {{-- Mensaje de éxito o error --}}
+    @if (session()->has('message'))
+        <div id="alert-message" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg mb-4 max-w-xs flex items-center justify-between">
+            <p>{{ session('message') }}</p>
+            <button onclick="document.getElementById('alert-message').style.display = 'none';" class="ml-4 bg-transparent text-white font-semibold hover:text-gray-200 focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    @endif
     <div class="overflow-x-auto rounded shadow bg-white dark:bg-neutral-900">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
             <thead class="bg-gray-100 dark:bg-neutral-950">
@@ -123,12 +134,28 @@
         <div class="rounded shadow-lg p-6 w-full max-w-lg z-10 bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100">
             <h2 class="text-lg font-bold mb-4">{{ $responsable_id ? 'Editar Responsable' : 'Nuevo Responsable' }}</h2>
             <div class="space-y-3">
+                <label class="block mb-1 font-medium text-gray-700 dark:text-gray-200">Nombre <span class="text-red-500">*</span></label>
                 <input type="text" wire:model="name" placeholder="Nombre" class="w-full border border-gray-300 dark:border-neutral-700 rounded px-3 py-2 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
+                @error('name')
+                    <p class="text-red-500 text-sm mt-1">Campo requerido</p>
+                @enderror
+                <label class="block mb-1 font-medium text-gray-700 dark:text-gray-200">Cédula <span class="text-red-500">*</span></label>
                 <input type="text" wire:model="cedula" placeholder="Cédula" class="w-full border border-gray-300 dark:border-neutral-700 rounded px-3 py-2 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
+                @error('cedula')
+                    <p class="text-red-500 text-sm mt-1">Campo requerido</p>
+                @enderror
+                <label class="block mb-1 font-medium text-gray-700 dark:text-gray-200">Email</label>
                 <input type="email" wire:model="email" placeholder="Email" class="w-full border border-gray-300 dark:border-neutral-700 rounded px-3 py-2 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
+
+                <label class="block mb-1 font-medium text-gray-700 dark:text-gray-200">Teléfono</label>
                 <input type="text" wire:model="telefono" placeholder="Teléfono" class="w-full border border-gray-300 dark:border-neutral-700 rounded px-3 py-2 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
+
+                <label class="block mb-1 font-medium text-gray-700 dark:text-gray-200">Cargo</label>
                 <input type="text" wire:model="cargo" placeholder="Cargo" class="w-full border border-gray-300 dark:border-neutral-700 rounded px-3 py-2 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
+
+                <label class="block mb-1 font-medium text-gray-700 dark:text-gray-200">Área</label>
                 <input type="text" wire:model="area" placeholder="Área" class="w-full border border-gray-300 dark:border-neutral-700 rounded px-3 py-2 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
+
             </div>
             <div class="mt-4 flex justify-end space-x-2">
                 <button wire:click="$set('modalFormVisible', false)" class="px-4 py-2 bg-gray-300 dark:bg-neutral-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-neutral-500">Cancelar</button>
