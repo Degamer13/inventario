@@ -75,10 +75,13 @@
         </flux:navlist.item>
 
     @endcan
+        @can('list salida')
 
-        <flux:navlist.item  :href="route('salidas.index')" :current="request()->routeIs('salidas.index')" wire:navigate>
-            {{ __('Salidas') }}
+
+        <flux:navlist.item icon="notebook"  :href="route('salidas.index')" :current="request()->routeIs('salidas.index')" wire:navigate>
+            {{ __('Registros de Salidas') }}
         </flux:navlist.item>
+        @endcan
 </flux:navlist.group>
 
 

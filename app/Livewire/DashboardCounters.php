@@ -11,6 +11,7 @@ use App\Models\Facilidad;
 use App\Models\MaquinariaFija;
 use App\Models\Sistema;
 use App\Models\Vehiculo;
+use App\Models\Salida;
 
 class DashboardCounters extends Component
 {
@@ -22,6 +23,7 @@ class DashboardCounters extends Component
     public $maquinariasFijasCount;
     public $sistemasCount;
     public $vehiculosCount;
+    public $salidasCount;
 
     public function mount()
     {
@@ -33,6 +35,7 @@ class DashboardCounters extends Component
         $this->maquinariasFijasCount = MaquinariaFija::count();
         $this->sistemasCount = Sistema::count();
         $this->vehiculosCount = Vehiculo::count();
+        $this->salidasCount = Salida::count();
     }
 
     public function render()

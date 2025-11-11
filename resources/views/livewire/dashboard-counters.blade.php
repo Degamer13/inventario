@@ -54,4 +54,11 @@
         <span class="text-3xl font-bold">{{ $vehiculosCount }}</span>
         <span class="mt-2 text-gray-500 dark:text-gray-300">Vehículos</span>
     </div>
+    {{-- Salidas --}}
+    <div class="p-6 bg-white dark:bg-neutral-700 rounded shadow flex flex-col items-center justify-center">
+        <flux:icon name="notebook" class="h-8 w-8 text-pink-600 mb-2" />
+        <span class="text-3xl font-bold">{{ $salidasCount }}</span>
+        <span class="mt-2 text-gray-500 dark:text-gray-300">Registros de Salidas</span>
+
 </div>
+

@@ -59,8 +59,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('vehiculos.index');
 
     // Rutas de SALIDAS (VERIFICADA LA SINTAXIS)
-    Route::get('salidas', SalidaIndex::class)
-        ->name('salidas.index');
+ Route::get('salidas', SalidaIndex::class)
+    ->name('salidas.index');
 
     // Rutas de Roles y Permisos
     Route::get('roles', RoleIndex::class)

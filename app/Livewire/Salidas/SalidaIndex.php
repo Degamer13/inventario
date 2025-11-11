@@ -12,11 +12,21 @@ use App\Models\Facilidad;
 use App\Models\Sistema;
 use App\Models\MaquinariaFija;
 use Illuminate\Support\Facades\DB;
+use Livewire\WithPagination;
 use Exception;
 
 class SalidaIndex extends Component
 {
-    // === PROPIEDADES DE BÚSQUEDA ===
+    use WithPagination;
+
+    // === PROPIEDADES DE BÚSQUEDA Y LISTADO ===
+    public $search = '';
+    public $sortColumn = 'fecha';
+    public $sortDirection = 'desc';
+    protected $queryString = ['search' => ['except' => ''], 'sortColumn', 'sortDirection'];
+    public $paginate = 5;
+
+    // === PROPIEDADES DE BÚSQUEDA DE RESPONSABLES ===
     public $searchEntregado = '';
     public $searchRecibido = '';
 
@@ -30,15 +40,31 @@ class SalidaIndex extends Component
 
     // === PROPIEDADES DE SOPORTE ===
     public $itemTypes = ['material', 'facilidad', 'maquinaria_fija', 'sistema', 'vehiculo'];
-    public $modalFormVisible = true;
+    public $modalFormVisible = false;
     public $limitResults = 15;
+
+    // === CONTROL DE MODAL PRINCIPAL ===
+    public function openModal()
+    {
+        $this->modalFormVisible = true;
+        $this->resetInput();
+    }
+
+    public function closeModal()
+    {
+        $this->modalFormVisible = false;
+        $this->resetInput();
+    }
 
     public function mount()
     {
         $this->fecha = now()->format('Y-m-d');
-        $this->addDetalle();
+        if (empty($this->detalles)) {
+            $this->addDetalle();
+        }
     }
 
+    // === LISTAR RESPONSABLES ===
     public function getResponsablesProperty()
     {
         $search = $this->searchEntregado ?: $this->searchRecibido;
@@ -49,8 +75,7 @@ class SalidaIndex extends Component
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
                   ->orWhere('cargo', 'like', '%' . $search . '%');
-            });
-            $query->limit(20);
+            })->limit(20);
         } else {
             $query->limit($this->limitResults);
         }
@@ -58,6 +83,7 @@ class SalidaIndex extends Component
         return $query->orderBy('name')->get();
     }
 
+    // === VALIDACIONES ===
     protected function rules()
     {
         return [
@@ -79,6 +105,7 @@ class SalidaIndex extends Component
         ];
     }
 
+    // === AÑADIR Y ELIMINAR DETALLES ===
     public function addDetalle()
     {
         $this->detalles[] = [
@@ -97,9 +124,10 @@ class SalidaIndex extends Component
         $this->detalles = array_values($this->detalles);
     }
 
+    // === GUARDAR SALIDA ===
     public function store()
     {
-        $this->detalles = array_map(function($detalle) {
+        $this->detalles = array_map(function ($detalle) {
             $detalle['error'] = null;
             return $detalle;
         }, $this->detalles);
@@ -109,7 +137,6 @@ class SalidaIndex extends Component
         try {
             DB::beginTransaction();
 
-            // Crear la Salida principal
             $salida = Salida::create($this->modelData());
 
             foreach ($this->detalles as $index => $detalleData) {
@@ -130,8 +157,7 @@ class SalidaIndex extends Component
                     throw new Exception("Tipo de ítem inválido.");
                 }
 
-                list($modelClass, $searchColumn) = $modelMap[$item_tipo];
-
+                [$modelClass, $searchColumn] = $modelMap[$item_tipo];
                 $item = $modelClass::where($searchColumn, $serial_placa)->first();
 
                 if (!$item) {
@@ -141,72 +167,90 @@ class SalidaIndex extends Component
 
                 $hasCantidadColumn = array_key_exists('cantidad', $item->getAttributes());
 
+                // === VALIDACIÓN ESPECIAL PARA VEHÍCULOS ===
                 if ($item_tipo === 'vehiculo') {
                     if ($cantidad > 1) {
                         $this->detalles[$index]['error'] = "Los vehículos se gestionan por placa individual. La cantidad debe ser 1.";
                         throw new Exception("Vehículo solicitado con cantidad > 1.");
                     }
 
-                    DetalleSalida::create([
-                        'salida_id' => $salida->id,
-                        'item_tipo' => $item_tipo,
-                        'item_id' => $item->id,
-                        'item_serial_placa' => $serial_placa,
-                        'descripcion' => $detalleData['descripcion'],
-                        'cantidad_salida' => $cantidad,
-                        'unidad_medida' => $detalleData['unidad_medida'],
-                    ]);
+                    $vehiculoEnUso = DetalleSalida::where('item_tipo', 'vehiculo')
+                        ->where('item_serial_placa', $serial_placa)
+                        ->exists();
 
+                    if ($vehiculoEnUso) {
+                        $this->detalles[$index]['error'] = "El vehículo con placa {$serial_placa} ya está registrado en otra salida.";
+                        throw new Exception("Vehículo ya registrado en otra salida.");
+                    }
                 } else {
                     if ($hasCantidadColumn) {
                         $stockActual = (int) $item->cantidad;
-
                         if ($stockActual < $cantidad) {
                             $this->detalles[$index]['error'] = "Stock insuficiente para {$serial_placa}. Disponible: {$stockActual}. Solicitado: {$cantidad}.";
                             throw new Exception("Stock insuficiente.");
                         }
-
                         $item->decrement('cantidad', $cantidad);
-
-                        DetalleSalida::create([
-                            'salida_id' => $salida->id,
-                            'item_tipo' => $item_tipo,
-                            'item_id' => $item->id,
-                            'item_serial_placa' => $serial_placa,
-                            'descripcion' => $detalleData['descripcion'],
-                            'cantidad_salida' => $cantidad,
-                            'unidad_medida' => $detalleData['unidad_medida'],
-                        ]);
-
                     } else {
                         if ($cantidad > 1) {
                             $this->detalles[$index]['error'] = "Este ítem no tiene control por cantidad. La cantidad debe ser 1.";
-                            throw new Exception("Ítem sin columna cantidad solicitado con cantidad > 1.");
+                            throw new Exception("Ítem sin control de cantidad.");
                         }
-
-                        DetalleSalida::create([
-                            'salida_id' => $salida->id,
-                            'item_tipo' => $item_tipo,
-                            'item_id' => $item->id,
-                            'item_serial_placa' => $serial_placa,
-                            'descripcion' => $detalleData['descripcion'],
-                            'cantidad_salida' => $cantidad,
-                            'unidad_medida' => $detalleData['unidad_medida'],
-                        ]);
                     }
                 }
+
+                DetalleSalida::create([
+                    'salida_id' => $salida->id,
+                    'item_tipo' => $item_tipo,
+                    'item_id' => $item->id,
+                    'item_serial_placa' => $serial_placa,
+                    'descripcion' => $detalleData['descripcion'],
+                    'cantidad_salida' => $cantidad,
+                    'unidad_medida' => $detalleData['unidad_medida'],
+                ]);
             }
 
             DB::commit();
-            session()->flash('success', '¡Salida registrada y cantidad actualizada con éxito!');
+            session()->flash('success', '¡Salida registrada con éxito!');
             $this->resetInput();
+            $this->closeModal();
 
         } catch (Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Error al registrar la salida. Revise los errores en la lista de ítems: ' . $e->getMessage());
+            session()->flash('error', 'Error al registrar la salida: ' . $e->getMessage());
         }
     }
 
+    // === ORDENAR COLUMNAS ===
+    public function sortBy($column)
+    {
+        if ($this->sortColumn === $column) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortColumn = $column;
+            $this->sortDirection = 'asc';
+        }
+        $this->gotoPage(1);
+    }
+
+    // === BUSCAR SALIDAS ===
+    public function searchSalidas()
+    {
+        $this->resetPage();
+    }
+
+    // === LIMPIAR CAMPOS ===
+    private function resetInput()
+    {
+        $this->reset([
+            'proyecto', 'ano', 'n_control', 'fecha', 'origen', 'destino',
+            'observaciones', 'entregado_por_id', 'recibido_por_id', 'detalles',
+            'searchEntregado', 'searchRecibido'
+        ]);
+        $this->resetValidation();
+        $this->mount();
+    }
+
+    // === DATOS DE MODELO ===
     private function modelData()
     {
         return [
@@ -222,19 +266,64 @@ class SalidaIndex extends Component
         ];
     }
 
-    private function resetInput()
+    // === MODAL DE DETALLES ===
+    public $selectedSalidaId = null;
+    public $detalleSalidaItems = [];
+    public $modalDetalleVisible = false;
+
+    public function openDetalleModal($salidaId)
     {
-        $this->reset([
-            'proyecto', 'ano', 'n_control', 'fecha', 'origen', 'destino',
-            'observaciones', 'entregado_por_id', 'recibido_por_id', 'detalles',
-            'searchEntregado', 'searchRecibido'
-        ]);
-        $this->resetValidation();
-        $this->mount();
+        $this->selectedSalidaId = $salidaId;
+        $this->detalleSalidaItems = DetalleSalida::where('salida_id', $salidaId)->get();
+        $this->modalDetalleVisible = true;
     }
 
+    public function closeDetalleModal()
+    {
+        $this->modalDetalleVisible = false;
+        $this->detalleSalidaItems = [];
+        $this->selectedSalidaId = null;
+    }
+
+    // === MODAL DE CONFIRMACIÓN DE ELIMINACIÓN ===
+    public $modalConfirmDelete = false;
+
+    public function confirmDelete($id)
+    {
+        $this->selectedSalidaId = $id;
+        $this->modalConfirmDelete = true;
+    }
+
+    public function delete()
+    {
+        if ($this->selectedSalidaId) {
+            $salida = Salida::find($this->selectedSalidaId);
+
+            if ($salida) {
+                $salida->delete();
+                session()->flash('success', 'Salida eliminada correctamente.');
+            }
+
+            $this->modalConfirmDelete = false;
+            $this->selectedSalidaId = null;
+        }
+    }
+
+    // === RENDER ===
     public function render()
     {
-        return view('livewire.salidas.salida-index');
+        $salidas = Salida::query()
+            ->when($this->search, function ($query) {
+                $query->where('n_control', 'like', '%' . $this->search . '%')
+                      ->orWhere('proyecto', 'like', '%' . $this->search . '%')
+                      ->orWhere('origen', 'like', '%' . $this->search . '%')
+                      ->orWhere('destino', 'like', '%' . $this->search . '%');
+            })
+            ->orderBy($this->sortColumn, $this->sortDirection)
+            ->paginate($this->paginate);
+
+        return view('livewire.salidas.salida-index', [
+            'salidas' => $salidas,
+        ]);
     }
 }
