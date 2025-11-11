@@ -63,7 +63,18 @@ class RolePermissionSeeder extends Seeder
             'show vehiculo',
             'edit vehiculo',
             'delete vehiculo',
-            'pdf vehiculo'
+            'pdf vehiculo',
+            'create salida',
+            'list salida',
+            'show salida',
+            'edit salida',
+            'delete salida',
+            'pdf salida',
+            'list detalle-salida',
+            'show detalle-salida',
+            'edit detalle-salida',
+            'delete detalle-salida',
+            'pdf detalle-salida'
 
 
 
