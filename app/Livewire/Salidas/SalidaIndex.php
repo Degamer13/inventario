@@ -11,6 +11,9 @@ use App\Models\Vehiculo;
 use App\Models\Facilidad;
 use App\Models\Sistema;
 use App\Models\MaquinariaFija;
+use Dompdf\Dompdf;
+use Dompdf\Options;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithPagination;
 use Exception;
@@ -326,4 +329,35 @@ class SalidaIndex extends Component
             'salidas' => $salidas,
         ]);
     }
+
+public function exportPdf($salidaId)
+{
+    // Cargar la salida con sus relaciones correctas
+    $salida = Salida::with(['entregadoPor', 'recibidoPor', 'detalles'])->findOrFail($salidaId);
+
+    // Preparar los datos para la vista PDF
+    $data = [
+        'salida' => $salida,
+        'detalles' => $salida->detalles, // ya vienen cargados
+    ];
+
+    // Renderizar la vista a HTML
+    $html = View::make('pdf.salida-individual', $data)->render();
+
+    // Configurar DomPDF
+    $options = new Options();
+    $options->set('isHtml5ParserEnabled', true);
+    $options->set('isRemoteEnabled', true);
+
+    $dompdf = new Dompdf($options);
+    $dompdf->loadHtml($html);
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
+
+    // Descargar el PDF
+    return response()->streamDownload(
+        fn () => print($dompdf->output()),
+        'Salida_'.$salida->id.'.pdf'
+    );
+}
 }

@@ -103,6 +103,18 @@
                 </button>
                    @endcan
 
+                 {{-- Descargar PDF --}}
+@can('pdf salida')
+    <button wire:click="exportPdf({{ $salida->id }})"
+        class="inline-flex items-center px-2 py-1 text-sm bg-red-600 text-white rounded-md shadow hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-400 transition-all duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 4h7v4h4v11c0 .55-.45 1-1 1H6c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1zm6 12H9v-2h3c.55 0 1-.45 1-1s-.45-1-1-1h-2v-2h2c.55 0 1-.45 1-1s-.45-1-1-1H9v-2h3c.55 0 1-.45 1-1s-.45-1-1-1H7v2.58l1.41 1.41c.2.2.3.47.3.7s-.1.5-.3.7l-1.41 1.41V16h3c.55 0 1-.45 1-1s-.45-1-1-1z" />
+        </svg>
+
+    </button>
+@endcan
+
+
                    @can('edit salida')
 
 
