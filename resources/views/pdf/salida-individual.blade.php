@@ -76,18 +76,23 @@
 
     {{-- ENCABEZADO CON LOGO Y TÍTULO --}}
     <div class="header-container">
-        <img src="{{ public_path('logo.jpg') }}" class="logo" alt="Logo">
+<img src="{{ $logoData }}" alt="Logo" style="width:120px;">
+
+
+
+
+
 
     </div>
 
     {{-- === TABLA PRINCIPAL === --}}
     <table>
-        <tr>
-            <td style="width: 35%"><span class="strong-text">PROYECTO:</span> {{ $salida->proyecto }}</td>
-            <td style="width: 15%"><span class="strong-text">AÑO:</span> {{ $salida->ano }}</td>
-            <td style="width: 35%"><span class="strong-text">N° CONTROL:</span> {{ $salida->n_control }}</td>
-            <td style="width: 15%"><span class="strong-text">FECHA:</span> {{ \Carbon\Carbon::parse($salida->fecha)->format('d/m/Y') }}</td>
-        </tr>
+   <tr>
+    <td style="width: 30%;"><span class="strong-text">PROYECTO:</span> {{ $salida->proyecto }}</td>
+    <td style="width: 30%;"><span class="strong-text">AÑO:</span> {{ $salida->ano }}</td>
+    <td style="width: 30%;"><span class="strong-text">N° CONTROL:</span> {{ $salida->n_control }}</td>
+    <td style="width: 10%;"><span class="strong-text">FECHA:</span> {{ \Carbon\Carbon::parse($salida->fecha)->format('d/m/Y') }}</td>
+</tr>
 
         <tr><td colspan="4" class="section-title">INFORMACIÓN DEL TRASLADO</td></tr>
         <tr>
@@ -169,20 +174,20 @@
         </tr>
 
         <tr>
-            <td style="width: 30%; font-weight: bold;">RECIBIDO POR:<br><span class="signature-label">(ALMACENISTA GRAL)</span></td>
-            <td style="width: 40%;"><span class="strong-text">NOMBRE Y APELLIDO:</span> {{ $salida->recibidoPorAlmacen->nombre ?? '---' }}</td>
-            <td style="width: 30%;"><span class="strong-text">FIRMA:</span> <span class="firma-line-text">&nbsp;</span></td>
+            <td style="width: 30%; font-weight: bold;">RECIBIDO POR:<br><span class="signature-label">(ALMACENISTA OBRA)</span></td>
+            <td style="width: 65%;"><span class="strong-text">NOMBRE Y APELLIDO:</span></td>
+            <td style="width: 05%;"><span class="strong-text">FIRMA:</span> <span class="firma-line-text">&nbsp;</span></td>
         </tr>
 
         <tr>
             <td style="font-weight: bold;">REVISADO POR:<br><span class="signature-label">(LOGÍSTICA)</span></td>
-            <td><span class="strong-text">NOMBRE Y APELLIDO:</span> {{ $salida->revisadoPor->nombre ?? '---' }}</td>
+            <td><span class="strong-text">NOMBRE Y APELLIDO:</span></td>
             <td><span class="strong-text">FIRMA:</span> <span class="firma-line-text">&nbsp;</span></td>
         </tr>
 
         <tr>
             <td style="font-weight: bold;">APROBADO POR:<br><span class="signature-label">(ALMACÉN PRINCIPAL)</span></td>
-            <td><span class="strong-text">NOMBRE Y APELLIDO:</span> {{ $salida->aprobadoPor->nombre ?? '---' }}</td>
+            <td><span class="strong-text">NOMBRE Y APELLIDO:</span> </td>
             <td><span class="strong-text">FIRMA:</span> <span class="firma-line-text">&nbsp;</span></td>
         </tr>
     </table>

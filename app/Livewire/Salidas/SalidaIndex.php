@@ -335,10 +335,16 @@ public function exportPdf($salidaId)
     // Cargar la salida con sus relaciones correctas
     $salida = Salida::with(['entregadoPor', 'recibidoPor', 'detalles'])->findOrFail($salidaId);
 
+    // Cargar logo y convertirlo a Base64
+    $logoPath = public_path('logo.jpg');
+    $logoBase64 = base64_encode(file_get_contents($logoPath));
+    $logoData = 'data:image/jpeg;base64,' . $logoBase64;
+
     // Preparar los datos para la vista PDF
     $data = [
         'salida' => $salida,
         'detalles' => $salida->detalles, // ya vienen cargados
+        'logoData' => $logoData,
     ];
 
     // Renderizar la vista a HTML
@@ -347,7 +353,7 @@ public function exportPdf($salidaId)
     // Configurar DomPDF
     $options = new Options();
     $options->set('isHtml5ParserEnabled', true);
-    $options->set('isRemoteEnabled', true);
+    $options->set('isRemoteEnabled', true); // Muy importante
 
     $dompdf = new Dompdf($options);
     $dompdf->loadHtml($html);
@@ -355,9 +361,10 @@ public function exportPdf($salidaId)
     $dompdf->render();
 
     // Descargar el PDF
-    return response()->streamDownload(
-        fn () => print($dompdf->output()),
-        'Salida_'.$salida->id.'.pdf'
-    );
+return response()->streamDownload(
+    fn () => print($dompdf->output()),
+    'Salida_'.$salida->n_control.'.pdf'
+);
 }
+
 }
