@@ -471,15 +471,19 @@
 
                     </div>
 
-                    {{-- FOOTER DEL MODAL (**Posición Absoluta para forzar la visibilidad**) --}}
-                    <div x-ref="footer" class="absolute inset-x-0 bottom-0 bg-gray-50 dark:bg-neutral-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg border-t border-gray-200 dark:border-neutral-700 z-30">
-                        <button type="submit" form="salidaForm" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
-                            Guardar Registro
-                        </button>
-                        <button wire:click="closeModal" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm dark:bg-neutral-700 dark:text-gray-100 dark:border-neutral-600 dark:hover:bg-neutral-600">
-                            Cancelar
-                        </button>
-                    </div>
+                   {{-- FOOTER DEL MODAL --}}
+<div x-ref="footer" class="absolute inset-x-0 bottom-0 bg-gray-50 dark:bg-neutral-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse sm:gap-3 rounded-b-lg border-t border-gray-200 dark:border-neutral-700 z-30">
+
+    <button type="submit" form="salidaForm" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 dark:hover:bg-indigo-500">
+        Guardar
+    </button>
+
+    {{-- Agregué mt-3 sm:mt-0 por si en móviles (celular vertical) los botones se apilan, para que tengan separación vertical --}}
+    <button wire:click="closeModal" type="button" class="mt-3 sm:mt-0 px-4 py-2 bg-gray-300 dark:bg-neutral-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-neutral-500">
+        Cancelar
+    </button>
+
+</div>
 
                 </div>
 
