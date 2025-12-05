@@ -37,20 +37,33 @@ class SalidaIndex extends Component
     public $proyecto, $ano, $n_control, $fecha;
     public $origen, $destino, $observaciones;
     public $entregado_por_id, $recibido_por_id;
+    public $entregado_por_name = ''; // Para autocomplete
+    public $recibido_por_name = ''; // Para autocomplete
 
     // === PROPIEDADES PARA LOS DETALLES MÚLTIPLES ===
     public $detalles = [];
 
-    // === PROPIEDADES DE SOPORTE ===
+    // 🚀 PROPIEDADES PARA FILTRADO EN CASCADA
+    public $filteredSerials = [];
+    protected $inventarioItemsCache = null;
+
+    // === PROPIEDADES DE SOPORTE Y MODALES ===
     public $itemTypes = ['material', 'facilidad', 'maquinaria_fija', 'sistema', 'vehiculo'];
     public $modalFormVisible = false;
     public $limitResults = 15;
+
+    // === PROPIEDADES DEL MODAL DE DETALLE Y ELIMINACIÓN ===
+    public $selectedSalidaId = null;
+    public $detalleSalidaItems = [];
+    public $modalDetalleVisible = false;
+    public $modalConfirmDelete = false;
 
     // === CONTROL DE MODAL PRINCIPAL ===
     public function openModal()
     {
         $this->modalFormVisible = true;
         $this->resetInput();
+        $this->loadInventoryItems(); // Cargar inventario al abrir el modal
     }
 
     public function closeModal()
@@ -65,13 +78,79 @@ class SalidaIndex extends Component
         if (empty($this->detalles)) {
             $this->addDetalle();
         }
+        // 🛠️ Inicializar variables de modales
+        $this->modalDetalleVisible = false;
+        $this->modalConfirmDelete = false;
+        $this->selectedSalidaId = null;
     }
 
-    // === LISTAR RESPONSABLES ===
+    // === DATOS DE INVENTARIO (para optimizar la búsqueda) ===
+    private function loadInventoryItems()
+    {
+        $models = [
+            'material' => [Material::class, 'serial'],
+            'vehiculo' => [Vehiculo::class, 'placa'],
+            'facilidad' => [Facilidad::class, 'serial'],
+            'maquinaria_fija' => [MaquinariaFija::class, 'serial'],
+            'sistema' => [Sistema::class, 'serial'],
+        ];
+
+        $items = [];
+        foreach ($models as $type => [$model, $serialColumn]) {
+            $select = ['id', DB::raw("{$serialColumn} as item_serial_placa"), 'descripcion'];
+            if ($model === Material::class) {
+                $select[] = 'cantidad';
+                $select[] = 'unidad_medida';
+            }
+
+            $modelItems = $model::select($select)->get()->map(function ($item) use ($type) {
+                $data = $item->toArray();
+                $data['item_tipo'] = $type;
+                $data['cantidad'] = $data['cantidad'] ?? 1;
+                $data['unidad_medida'] = $data['unidad_medida'] ?? (($type === 'vehiculo') ? 'Unidad' : '');
+                return $data;
+            })->toArray();
+
+            $items = array_merge($items, $modelItems);
+        }
+
+        $this->inventarioItemsCache = $items;
+        $this->initializeFilteredSerials();
+    }
+
+    private function initializeFilteredSerials()
+    {
+        if (is_array($this->inventarioItemsCache)) {
+            foreach ($this->detalles as $index => $detalle) {
+                $this->filteredSerials[$index] = $this->getSerialsByType($detalle['item_tipo']);
+            }
+        }
+    }
+
+    private function getInventarioItems()
+    {
+        if (is_null($this->inventarioItemsCache)) {
+            $this->loadInventoryItems();
+        }
+        return collect($this->inventarioItemsCache);
+    }
+
+    private function getSerialsByType(string $type)
+    {
+        return $this->getInventarioItems()
+            ->where('item_tipo', $type)
+            ->pluck('item_serial_placa')
+            ->unique()
+            ->sort()
+            ->values()
+            ->toArray();
+    }
+    // === FIN DATOS DE INVENTARIO ===
+
+    // === LISTAR RESPONSABLES (Mantenido) ===
     public function getResponsablesProperty()
     {
         $search = $this->searchEntregado ?: $this->searchRecibido;
-
         $query = Responsable::select('id', 'name', 'cargo');
 
         if (!empty($search)) {
@@ -86,7 +165,54 @@ class SalidaIndex extends Component
         return $query->orderBy('name')->get();
     }
 
-    // === VALIDACIONES ===
+    // === LISTENERS PARA EL FILTRADO Y AUTOCOMPLETADO 🚀 ===
+    public function updatedDetalles($value, $key)
+    {
+        if (strpos($key, '.') === false) return;
+
+        [$index, $field] = explode('.', $key);
+        $index = (int) $index;
+
+        if ($field === 'item_tipo') {
+            $this->detalles[$index]['item_serial_placa'] = '';
+            $this->detalles[$index]['descripcion'] = '';
+
+            if ($value === 'vehiculo') {
+                $this->detalles[$index]['cantidad_salida'] = 1;
+                $this->detalles[$index]['unidad_medida'] = 'Unidad';
+            } else {
+                $this->detalles[$index]['cantidad_salida'] = 1;
+                $this->detalles[$index]['unidad_medida'] = '';
+            }
+
+            $this->filteredSerials[$index] = $this->getSerialsByType($value);
+
+        } elseif ($field === 'item_serial_placa' && !empty($value)) {
+            $selectedSerial = $value;
+            $item_tipo = $this->detalles[$index]['item_tipo'];
+
+            $item = $this->getInventarioItems()->first(function($item) use ($selectedSerial, $item_tipo) {
+                return $item['item_serial_placa'] === $selectedSerial && $item['item_tipo'] === $item_tipo;
+            });
+
+            if ($item) {
+                $this->detalles[$index]['descripcion'] = $item['descripcion'];
+
+                if ($item_tipo === 'material' && isset($item['unidad_medida'])) {
+                    $this->detalles[$index]['unidad_medida'] = $item['unidad_medida'];
+                } elseif ($item_tipo === 'vehiculo') {
+                    $this->detalles[$index]['cantidad_salida'] = 1;
+                    $this->detalles[$index]['unidad_medida'] = 'Unidad';
+                }
+            } else {
+                $this->detalles[$index]['descripcion'] = 'Descripción no encontrada.';
+                $this->detalles[$index]['unidad_medida'] = '';
+            }
+        }
+    }
+
+
+    // === VALIDACIONES (Mantenido) ===
     protected function rules()
     {
         return [
@@ -102,7 +228,7 @@ class SalidaIndex extends Component
             'detalles' => 'required|array|min:1',
             'detalles.*.item_tipo' => 'required|in:' . implode(',', $this->itemTypes),
             'detalles.*.item_serial_placa' => 'required|string|max:255',
-            'detalles.*.cantidad_salida' => 'required|integer|min:1',
+            'detalles.*.cantidad_salida' => 'required|integer|min:1', // Cantidad >= 1
             'detalles.*.descripcion' => 'required|string|max:255',
             'detalles.*.unidad_medida' => 'nullable|string|max:255',
         ];
@@ -111,6 +237,7 @@ class SalidaIndex extends Component
     // === AÑADIR Y ELIMINAR DETALLES ===
     public function addDetalle()
     {
+        $newIndex = count($this->detalles);
         $this->detalles[] = [
             'item_tipo' => 'material',
             'item_serial_placa' => '',
@@ -119,15 +246,26 @@ class SalidaIndex extends Component
             'unidad_medida' => '',
             'error' => null,
         ];
+
+        if (!is_null($this->inventarioItemsCache)) {
+            $this->filteredSerials[$newIndex] = $this->getSerialsByType('material');
+        } else {
+             $this->filteredSerials[$newIndex] = [];
+        }
     }
 
     public function removeDetalle($index)
     {
         unset($this->detalles[$index]);
         $this->detalles = array_values($this->detalles);
+
+        if (isset($this->filteredSerials[$index])) {
+             unset($this->filteredSerials[$index]);
+             $this->filteredSerials = array_values($this->filteredSerials);
+        }
     }
 
-    // === GUARDAR SALIDA ===
+    // === GUARDAR SALIDA (Descuento de stock y validación de cantidad corregida) ===
     public function store()
     {
         $this->detalles = array_map(function ($detalle) {
@@ -168,38 +306,47 @@ class SalidaIndex extends Component
                     throw new Exception("Ítem no encontrado.");
                 }
 
-                $hasCantidadColumn = array_key_exists('cantidad', $item->getAttributes());
-
-                // === VALIDACIÓN ESPECIAL PARA VEHÍCULOS ===
+                // 🛠️ Lógica de Descuento y Validación
                 if ($item_tipo === 'vehiculo') {
-                    if ($cantidad > 1) {
-                        $this->detalles[$index]['error'] = "Los vehículos se gestionan por placa individual. La cantidad debe ser 1.";
-                        throw new Exception("Vehículo solicitado con cantidad > 1.");
+                    if ($cantidad !== 1) {
+                        $this->detalles[$index]['error'] = "Los vehículos se gestionan por placa individual. La cantidad debe ser exactamente 1.";
+                        throw new Exception("Vehículo solicitado con cantidad distinta de 1.");
                     }
 
                     $vehiculoEnUso = DetalleSalida::where('item_tipo', 'vehiculo')
                         ->where('item_serial_placa', $serial_placa)
+                        ->whereDoesntHave('salida', function ($q) {
+                             $q->whereNotNull('fecha_retorno');
+                        })
                         ->exists();
 
                     if ($vehiculoEnUso) {
-                        $this->detalles[$index]['error'] = "El vehículo con placa {$serial_placa} ya está registrado en otra salida.";
+                        $this->detalles[$index]['error'] = "El vehículo con placa {$serial_placa} ya está registrado en otra salida y no ha retornado.";
                         throw new Exception("Vehículo ya registrado en otra salida.");
                     }
-                } else {
-                    if ($hasCantidadColumn) {
-                        $stockActual = (int) $item->cantidad;
-                        if ($stockActual < $cantidad) {
-                            $this->detalles[$index]['error'] = "Stock insuficiente para {$serial_placa}. Disponible: {$stockActual}. Solicitado: {$cantidad}.";
-                            throw new Exception("Stock insuficiente.");
-                        }
-                        $item->decrement('cantidad', $cantidad);
-                    } else {
-                        if ($cantidad > 1) {
-                            $this->detalles[$index]['error'] = "Este ítem no tiene control por cantidad. La cantidad debe ser 1.";
-                            throw new Exception("Ítem sin control de cantidad.");
-                        }
+
+                } elseif ($item_tipo === 'material') {
+                    // ✅ DESCUENTO Y VALIDACIÓN DE STOCK PARA MATERIALES
+
+                    $stockActual = (int) $item->cantidad;
+
+                    if ($stockActual < $cantidad) {
+                        $this->detalles[$index]['error'] = "Stock insuficiente para {$serial_placa}. Disponible: {$stockActual}. Solicitado: {$cantidad}.";
+                        throw new Exception("Stock insuficiente.");
                     }
+
+                    $item->decrement('cantidad', $cantidad); // 🚀 ACCIÓN DE DESCUENTO
+
+                } else {
+                    // Otros ítems (Facilidad, Maquinaria Fija, Sistema)
+                    if ($cantidad < 1) {
+                         $this->detalles[$index]['error'] = "La cantidad debe ser 1 o mayor.";
+                         throw new Exception("Cantidad inválida para ítem.");
+                    }
+                    // Si tienes lógica de estado para estos ítems, iría aquí (e.g., cambiar estado a 'En uso')
                 }
+                // === FIN Lógica de Descuento y Validación ===
+
 
                 DetalleSalida::create([
                     'salida_id' => $salida->id,
@@ -220,10 +367,14 @@ class SalidaIndex extends Component
         } catch (Exception $e) {
             DB::rollBack();
             session()->flash('error', 'Error al registrar la salida: ' . $e->getMessage());
+            if (collect($this->detalles)->pluck('error')->filter()->isNotEmpty()) {
+                $this->dispatch('alert', ['type' => 'error', 'message' => 'Revise los errores de stock/disponibilidad en la tabla de detalles.']);
+            }
         }
     }
+    // === FIN GUARDAR SALIDA ===
 
-    // === ORDENAR COLUMNAS ===
+    // === ORDENAR COLUMNAS (Mantenido) ===
     public function sortBy($column)
     {
         if ($this->sortColumn === $column) {
@@ -235,25 +386,32 @@ class SalidaIndex extends Component
         $this->gotoPage(1);
     }
 
-    // === BUSCAR SALIDAS ===
+    // === BUSCAR SALIDAS (Mantenido) ===
     public function searchSalidas()
     {
         $this->resetPage();
     }
 
-    // === LIMPIAR CAMPOS ===
+    // === LIMPIAR CAMPOS (Corregido para manejar todas las propiedades) ===
     private function resetInput()
     {
         $this->reset([
             'proyecto', 'ano', 'n_control', 'fecha', 'origen', 'destino',
             'observaciones', 'entregado_por_id', 'recibido_por_id', 'detalles',
-            'searchEntregado', 'searchRecibido'
+            'searchEntregado', 'searchRecibido',
+            'entregado_por_name', 'recibido_por_name',
+            'filteredSerials',
+            'modalDetalleVisible',
+            'modalConfirmDelete',
+            'selectedSalidaId',
+            'detalleSalidaItems'
         ]);
         $this->resetValidation();
         $this->mount();
+        $this->inventarioItemsCache = null;
     }
 
-    // === DATOS DE MODELO ===
+    // === DATOS DE MODELO (Mantenido) ===
     private function modelData()
     {
         return [
@@ -269,11 +427,7 @@ class SalidaIndex extends Component
         ];
     }
 
-    // === MODAL DE DETALLES ===
-    public $selectedSalidaId = null;
-    public $detalleSalidaItems = [];
-    public $modalDetalleVisible = false;
-
+    // === MODAL DE DETALLES (Mantenido) ===
     public function openDetalleModal($salidaId)
     {
         $this->selectedSalidaId = $salidaId;
@@ -288,9 +442,7 @@ class SalidaIndex extends Component
         $this->selectedSalidaId = null;
     }
 
-    // === MODAL DE CONFIRMACIÓN DE ELIMINACIÓN ===
-    public $modalConfirmDelete = false;
-
+    // === MODAL DE CONFIRMACIÓN DE ELIMINACIÓN (Mantenido) ===
     public function confirmDelete($id)
     {
         $this->selectedSalidaId = $id;
@@ -303,6 +455,7 @@ class SalidaIndex extends Component
             $salida = Salida::find($this->selectedSalidaId);
 
             if ($salida) {
+                // Lógica de reversión de stock/estado debería ir aquí si se elimina la salida
                 $salida->delete();
                 session()->flash('success', 'Salida eliminada correctamente.');
             }
@@ -312,7 +465,7 @@ class SalidaIndex extends Component
         }
     }
 
-    // === RENDER ===
+    // === RENDER (Mantenido) ===
     public function render()
     {
         $salidas = Salida::query()
@@ -330,41 +483,40 @@ class SalidaIndex extends Component
         ]);
     }
 
-public function exportPdf($salidaId)
-{
-    // Cargar la salida con sus relaciones correctas
-    $salida = Salida::with(['entregadoPor', 'recibidoPor', 'detalles'])->findOrFail($salidaId);
+    public function exportPdf($salidaId)
+    {
+        // Cargar la salida con sus relaciones correctas
+        $salida = Salida::with(['entregadoPor', 'recibidoPor', 'detalles'])->findOrFail($salidaId);
 
-    // Cargar logo y convertirlo a Base64
-    $logoPath = public_path('logo.jpg');
-    $logoBase64 = base64_encode(file_get_contents($logoPath));
-    $logoData = 'data:image/jpeg;base64,' . $logoBase64;
+        // Cargar logo y convertirlo a Base64
+        $logoPath = public_path('logo.jpg');
+        $logoBase64 = base64_encode(file_get_contents($logoPath));
+        $logoData = 'data:image/jpeg;base64,' . $logoBase64;
 
-    // Preparar los datos para la vista PDF
-    $data = [
-        'salida' => $salida,
-        'detalles' => $salida->detalles, // ya vienen cargados
-        'logoData' => $logoData,
-    ];
+        // Preparar los datos para la vista PDF
+        $data = [
+            'salida' => $salida,
+            'detalles' => $salida->detalles, // ya vienen cargados
+            'logoData' => $logoData,
+        ];
 
-    // Renderizar la vista a HTML
-    $html = View::make('pdf.salida-individual', $data)->render();
+        // Renderizar la vista a HTML
+        $html = View::make('pdf.salida-individual', $data)->render();
 
-    // Configurar DomPDF
-    $options = new Options();
-    $options->set('isHtml5ParserEnabled', true);
-    $options->set('isRemoteEnabled', true); // Muy importante
+        // Configurar DomPDF
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true); // Muy importante
 
-    $dompdf = new Dompdf($options);
-    $dompdf->loadHtml($html);
-    $dompdf->setPaper('A4', 'portrait');
-    $dompdf->render();
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
 
-    // Descargar el PDF
-return response()->streamDownload(
-    fn () => print($dompdf->output()),
-    'Salida_'.$salida->n_control.'.pdf'
-);
-}
-
+        // Descargar el PDF
+        return response()->streamDownload(
+            fn () => print($dompdf->output()),
+            'Salida_'.$salida->n_control.'.pdf'
+        );
+    }
 }

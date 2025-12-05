@@ -400,58 +400,89 @@
                                             <th class="px-3 py-2 w-[5%]"></th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
-                                        @foreach ($detalles as $index => $detalle)
-                                            <tr wire:key="detalle-{{ $index }}" class="bg-white dark:bg-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-700">
-                                                <td class="px-3 py-2">
-                                                    <select wire:model.defer="detalles.{{ $index }}.item_tipo" class="text-sm p-1 w-full rounded border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800">
-                                                        @foreach ($itemTypes as $type)
-                                                            <option value="{{ $type }}">{{ ucfirst($type) }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                    @error("detalles.{$index}.item_tipo")
-                                                        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
-                                                    @enderror
-                                                </td>
-                                                <td class="px-3 py-2">
-                                                    <input type="text" wire:model.defer="detalles.{{ $index }}.item_serial_placa" class="text-sm p-1 w-full rounded border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800">
-                                                    @error("detalles.{$index}.item_serial_placa")
-                                                        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
-                                                    @enderror
-                                                    @if(isset($detalles[$index]['error']) && $detalles[$index]['error'])
-                                                         <p class="text-red-600 text-xs mt-1 font-bold">{{ $detalles[$index]['error'] }}</p>
-                                                    @endif
-                                                </td>
-                                                <td class="px-3 py-2">
-                                                    <input type="text" wire:model.defer="detalles.{{ $index }}.descripcion" class="text-sm p-1 w-full rounded border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800">
-                                                    @error("detalles.{$index}.descripcion")
-                                                        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
-                                                    @enderror
-                                                </td>
-                                                <td class="px-3 py-2">
-                                                    <input type="number"
-                                                            wire:model.defer="detalles.{{ $index }}.cantidad_salida"
-                                                            min="1"
-                                                            class="text-sm p-1 w-full rounded border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800"
-                                                            @if($detalle['item_tipo'] === 'vehiculo') readonly @endif>
-                                                    @error("detalles.{$index}.cantidad_salida")
-                                                        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
-                                                    @enderror
-                                                </td>
-                                                <td class="px-3 py-2">
-                                                    <input type="text"
-                                                            wire:model.defer="detalles.{{ $index }}.unidad_medida"
-                                                            class="text-sm p-1 w-full rounded border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800"
-                                                            @if($detalle['item_tipo'] === 'vehiculo') readonly @endif>
-                                                </td>
-                                                <td class="px-3 py-2 text-center">
-                                                    <button type="button" wire:click="removeDetalle({{ $index }})" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 text-xl font-bold p-1">
-                                                        &times;
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
+                                 <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+    @foreach ($detalles as $index => $detalle)
+        <tr wire:key="detalle-{{ $index }}" class="bg-white dark:bg-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-700">
+            {{-- TIPO DE ÍTEM (Ahora usa wire:model.live) --}}
+            <td class="px-3 py-2">
+                <select wire:model.live="detalles.{{ $index }}.item_tipo"
+                        class="text-sm p-1 w-full rounded border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+                    <option value="">-- Seleccione Tipo --</option>
+                    @foreach ($itemTypes as $type)
+                        <option value="{{ $type }}">{{ ucfirst($type) }}</option>
+                    @endforeach
+                </select>
+                @error("detalles.{$index}.item_tipo")
+                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                @enderror
+            </td>
+
+            {{-- SERIAL / PLACA (Ahora es un SELECT con opciones filtradas y usa wire:model.live) --}}
+        <td class="px-3 py-2">
+    <input type="text"
+           list="serial-suggestions-{{ $index }}"
+           wire:model.live.debounce.300ms="detalles.{{ $index }}.item_serial_placa"
+           class="text-sm p-1 w-full rounded border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+
+    {{-- La lista de sugerencias se alimenta del array filtrado por el backend --}}
+    <datalist id="serial-suggestions-{{ $index }}">
+        @if (isset($filteredSerials[$index]))
+            @foreach ($filteredSerials[$index] as $serial)
+                <option value="{{ $serial }}">
+            @endforeach
+        @endif
+    </datalist>
+
+    @error("detalles.{$index}.item_serial_placa")
+        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+    @enderror
+    {{-- ... otros errores ... --}}
+</td>
+            {{-- DESCRIPCIÓN (Ahora es READONLY y se rellena automáticamente) --}}
+            <td class="px-3 py-2">
+                <input type="text" wire:model.defer="detalles.{{ $index }}.descripcion"
+                       class="text-sm p-1 w-full rounded border border-gray-300 dark:border-neutral-700 bg-gray-100 dark:bg-neutral-700 cursor-not-allowed"
+                       readonly>
+                @error("detalles.{$index}.descripcion")
+                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                @enderror
+                {{-- 🛑 ESTA ES LA LÍNEA CLAVE PARA MOSTRAR EL ERROR DE STOCK DEL BACKEND --}}
+    @if(isset($detalle['error']) && $detalle['error'])
+         <p class="text-red-600 text-xs mt-1 font-bold">{{ $detalle['error'] }}</p>
+    @endif
+            </td>
+
+            {{-- CANTIDAD --}}
+            <td class="px-3 py-2">
+                <input type="number"
+                    wire:model.defer="detalles.{{ $index }}.cantidad_salida"
+                    min="1"
+                    class="text-sm p-1 w-full rounded border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800
+                    @if($detalle['item_tipo'] === 'vehiculo') bg-gray-100 cursor-not-allowed @endif"
+                    @if($detalle['item_tipo'] === 'vehiculo') readonly @endif>
+                @error("detalles.{$index}.cantidad_salida")
+                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                @enderror
+            </td>
+
+            {{-- UNIDAD --}}
+            <td class="px-3 py-2">
+                <input type="text"
+                    wire:model.defer="detalles.{{ $index }}.unidad_medida"
+                    class="text-sm p-1 w-full rounded border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800
+                    @if($detalle['item_tipo'] === 'vehiculo') bg-gray-100 cursor-not-allowed @endif"
+                    @if($detalle['item_tipo'] === 'vehiculo') readonly @endif>
+            </td>
+
+            {{-- BOTÓN ELIMINAR (Mantenido) --}}
+            <td class="px-3 py-2 text-center">
+                <button type="button" wire:click="removeDetalle({{ $index }})" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 text-xl font-bold p-1">
+                    &times;
+                </button>
+            </td>
+        </tr>
+    @endforeach
+</tbody>
                                 </table>
                             </div>
 
