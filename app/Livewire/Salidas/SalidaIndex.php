@@ -473,6 +473,9 @@ class SalidaIndex extends Component
                 $query->where('n_control', 'like', '%' . $this->search . '%')
                       ->orWhere('proyecto', 'like', '%' . $this->search . '%')
                       ->orWhere('origen', 'like', '%' . $this->search . '%')
+                      ->orWhere('ano', 'like', '%' . $this->search . '%')
+                      ->orWhere('fecha', 'like', '%' . $this->search . '%')
+                      ->orWhere('observaciones', 'like', '%' . $this->search . '%')
                       ->orWhere('destino', 'like', '%' . $this->search . '%');
             })
             ->orderBy($this->sortColumn, $this->sortDirection)
