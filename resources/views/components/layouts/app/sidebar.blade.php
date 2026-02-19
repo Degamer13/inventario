@@ -42,7 +42,7 @@
 
     </flux:navlist.item>
 @endcan
-@can('crear backup')
+@can('list backup')
     <flux:navlist.item icon="circle-stack" :href="route('backup-manager')" :current="request()->routeIs('backup-manager')" wire:navigate>
         {{ __('Backup Manager') }}
     </flux:navlist.item>

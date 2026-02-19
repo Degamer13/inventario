@@ -76,7 +76,7 @@ Route::middleware(['auth'])->group(function () {
     // Tu nueva ruta de backups
 Route::get('backup-manager', BackupManager::class)
     ->name('backup-manager')
-    ->middleware('can:crear backup');
+    ->middleware('can:list backup');
     // Rutas de configuración con Volt
     Volt::route('settings/profile', 'settings.profile')->name('profile.edit');
     Volt::route('settings/password', 'settings.password')->name('password.edit');
