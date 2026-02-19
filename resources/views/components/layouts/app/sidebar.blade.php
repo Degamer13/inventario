@@ -39,8 +39,15 @@
         :current="request()->routeIs('permissions.index')"
         wire:navigate>
         {{ __('Permissions') }}
+
     </flux:navlist.item>
 @endcan
+@can('crear backup')
+    <flux:navlist.item icon="circle-stack" :href="route('backup-manager')" :current="request()->routeIs('backup-manager')" wire:navigate>
+        {{ __('Backup Manager') }}
+    </flux:navlist.item>
+@endcan
+
                     @can('list responsable')
                         <flux:navlist.item icon="user-group" :href="route('responsables.index')" :current="request()->routeIs('responsables.index')" wire:navigate>
                             {{ __('Responsables') }}
