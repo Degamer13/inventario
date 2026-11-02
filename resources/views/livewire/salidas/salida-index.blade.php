@@ -182,7 +182,7 @@
                             <h3 class="text-xl font-semibold mt-6 mb-4 text-indigo-600 dark:text-indigo-400">Responsables y Ubicaciones</h3>
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
 
-                                {{-- Entregado por (Autocomplete con botón +) --}}
+                                {{-- Entregado por --}}
                                 <div>
                                     <div class="flex items-center justify-between mb-1">
                                         <label class="block text-sm font-medium">Entregado por:</label>
@@ -271,7 +271,7 @@
                                     @error('entregado_por_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                                 </div>
 
-                                {{-- Recibido por (Autocomplete con botón +) --}}
+                                {{-- Recibido por --}}
                                 <div>
                                     <div class="flex items-center justify-between mb-1">
                                         <label class="block text-sm font-medium">Recibido por:</label>
@@ -400,12 +400,12 @@
                                                 {{-- SELECTOR DESPLEGABLE CON BUSCADOR DINÁMICO Y REACTIVO --}}
                                                 <td class="px-3 py-2">
                                                     <div
-                                                        wire:key="item-search-container-{{ $index }}"
+                                                        wire:key="item-search-container-{{ $index }}-{{ $detalle['item_tipo'] ?? 'vacio' }}"
                                                         x-data="{
                                                             is_open: false,
                                                             active_index: -1,
                                                             search_query: '',
-                                                            items: @js($filteredSerials[$index] ?? []),
+                                                            items: @entangle('filteredSerials.' . $index).live,
                                                             selectItem(serial) {
                                                                 @this.set('detalles.{{ $index }}.item_serial_placa', serial);
                                                                 this.is_open = false;
@@ -436,12 +436,12 @@
                                                                 }
                                                             },
                                                             getFilteredItems() {
-                                                                if (!this.search_query.trim()) return this.items;
+                                                                const list = Array.isArray(this.items) ? this.items : [];
+                                                                if (!this.search_query || !this.search_query.trim()) return list;
                                                                 const q = this.search_query.toLowerCase();
-                                                                return this.items.filter(i => (i.display_search && i.display_search.toLowerCase().includes(q)));
+                                                                return list.filter(i => (i.display_search && i.display_search.toLowerCase().includes(q)));
                                                             }
                                                         }"
-                                                        x-init="$watch('$wire.filteredSerials.{{ $index }}', value => items = value || [])"
                                                         @click.away="is_open = false; active_index = -1"
                                                         class="relative"
                                                     >

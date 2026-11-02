@@ -291,6 +291,22 @@ class SalidaIndex extends Component
         return $query->orderBy('name')->get();
     }
 
+    // Hook dedicado para cambios inmediatos en el select de item_tipo
+    public function updatedDetallesItemTipo($value, $key)
+    {
+        $index = (int) $key;
+
+        $this->detalles[$index]['item_tipo'] = $value;
+        $this->detalles[$index]['item_serial_placa'] = '';
+        $this->detalles[$index]['descripcion'] = '';
+        $this->detalles[$index]['cantidad_salida'] = 1;
+        $this->detalles[$index]['stock_disponible'] = null;
+        $this->detalles[$index]['unidad_medida'] = ($value === 'vehiculo') ? 'Unidad' : '';
+        $this->detalles[$index]['error'] = null;
+
+        $this->filteredSerials[$index] = $this->getSerialsByType($value ?? '');
+    }
+
     public function updatedDetalles($value, $key)
     {
         if (strpos($key, '.') === false) return;
@@ -299,14 +315,7 @@ class SalidaIndex extends Component
         $index = (int) $index;
 
         if ($field === 'item_tipo') {
-            $this->detalles[$index]['item_serial_placa'] = '';
-            $this->detalles[$index]['descripcion'] = '';
-            $this->detalles[$index]['cantidad_salida'] = 1;
-            $this->detalles[$index]['stock_disponible'] = null;
-            $this->detalles[$index]['unidad_medida'] = ($value === 'vehiculo') ? 'Unidad' : '';
-            $this->detalles[$index]['error'] = null;
-
-            $this->filteredSerials[$index] = $this->getSerialsByType($value);
+            $this->updatedDetallesItemTipo($value, $index);
 
         } elseif ($field === 'item_serial_placa' && !empty($value)) {
             $searchValue = trim($value);
@@ -403,7 +412,6 @@ class SalidaIndex extends Component
             'error' => null,
         ];
 
-        // Se obtienen los datos directamente cargando la caché si aún no existe
         $this->filteredSerials[$newIndex] = $this->getSerialsByType($defaultTipo);
     }
 
