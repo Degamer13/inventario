@@ -73,6 +73,7 @@ class SalidaIndex extends Component
         $this->resetInput();
         $this->modalFormVisible = true;
         $this->loadInventoryItems();
+        $this->initializeFilteredSerials();
     }
 
     public function closeModal()
@@ -201,7 +202,6 @@ class SalidaIndex extends Component
                 $descripcion   = $itemArray['descripcion'] ?? '';
                 $stockActual   = (int) ($itemArray['cantidad'] ?? 1);
 
-                // Construcción de la etiqueta del selector con el stock visible
                 $etiqueta = $serialPlaca;
                 if (!empty($codigo)) {
                     $etiqueta .= ' | Cód: ' . $codigo;
@@ -239,15 +239,13 @@ class SalidaIndex extends Component
         }
 
         $this->inventarioItemsCache = $items;
-        $this->initializeFilteredSerials();
     }
 
     private function initializeFilteredSerials()
     {
-        if (is_array($this->inventarioItemsCache)) {
-            foreach ($this->detalles as $index => $detalle) {
-                $this->filteredSerials[$index] = $this->getSerialsByType($detalle['item_tipo']);
-            }
+        foreach ($this->detalles as $index => $detalle) {
+            $tipo = $detalle['item_tipo'] ?? '';
+            $this->filteredSerials[$index] = !empty($tipo) ? $this->getSerialsByType($tipo) : [];
         }
     }
 
@@ -261,6 +259,8 @@ class SalidaIndex extends Component
 
     private function getSerialsByType(string $type)
     {
+        if (empty($type)) return [];
+
         return $this->getInventarioItems()
             ->where('item_tipo', $type)
             ->map(function ($item) {
@@ -291,7 +291,6 @@ class SalidaIndex extends Component
         return $query->orderBy('name')->get();
     }
 
-    // === IDENTIFICAR Y ASIGNAR STOCK DE FORMA INMEDIATA ===
     public function updatedDetalles($value, $key)
     {
         if (strpos($key, '.') === false) return;
@@ -346,7 +345,6 @@ class SalidaIndex extends Component
                     $this->detalles[$index]['unidad_medida'] = 'Unidad';
                 }
 
-                // Si no hay stock disponible, avisar inmediatamente
                 if ($this->detalles[$index]['stock_disponible'] <= 0) {
                     $this->detalles[$index]['error'] = "¡Sin stock disponible!";
                 }
@@ -358,7 +356,6 @@ class SalidaIndex extends Component
             }
 
         } elseif ($field === 'cantidad_salida') {
-            // Validación en tiempo real si el usuario tipea una cantidad superior al stock
             $solicitado = (int) $value;
             $stock = $this->detalles[$index]['stock_disponible'] ?? null;
 
@@ -394,8 +391,10 @@ class SalidaIndex extends Component
     public function addDetalle()
     {
         $newIndex = count($this->detalles);
+        $defaultTipo = 'material';
+
         $this->detalles[] = [
-            'item_tipo' => 'material',
+            'item_tipo' => $defaultTipo,
             'item_serial_placa' => '',
             'cantidad_salida' => 1,
             'stock_disponible' => null,
@@ -404,11 +403,8 @@ class SalidaIndex extends Component
             'error' => null,
         ];
 
-        if (!is_null($this->inventarioItemsCache)) {
-            $this->filteredSerials[$newIndex] = $this->getSerialsByType('material');
-        } else {
-            $this->filteredSerials[$newIndex] = [];
-        }
+        // Se obtienen los datos directamente cargando la caché si aún no existe
+        $this->filteredSerials[$newIndex] = $this->getSerialsByType($defaultTipo);
     }
 
     public function removeDetalle($index)
@@ -555,9 +551,9 @@ class SalidaIndex extends Component
 
         $this->fecha = now()->format('Y-m-d');
         $this->detalles = [];
+        $this->loadInventoryItems();
         $this->addDetalle();
         $this->resetValidation();
-        $this->inventarioItemsCache = null;
     }
 
     private function modelData()

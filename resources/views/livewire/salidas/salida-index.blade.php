@@ -198,6 +198,7 @@
                                     </div>
 
                                     <div
+                                        wire:key="resp-select-entregado"
                                         x-data="{
                                             is_open: false,
                                             active_index: -1,
@@ -285,7 +286,9 @@
                                         </button>
                                     </div>
 
-                                    <div x-data="{
+                                    <div
+                                        wire:key="resp-select-recibido"
+                                        x-data="{
                                         is_open: false,
                                         active_index: -1,
                                         selected_name: @entangle('recibido_por_name').defer,
@@ -380,7 +383,7 @@
                                     </thead>
                                     <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
                                         @foreach ($detalles as $index => $detalle)
-                                            <tr wire:key="detalle-{{ $index }}" class="bg-white dark:bg-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-700">
+                                            <tr wire:key="detalle-row-{{ $index }}" class="bg-white dark:bg-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-700">
                                                 <td class="px-3 py-2">
                                                     <select wire:model.live="detalles.{{ $index }}.item_tipo"
                                                             class="text-sm p-1 w-full rounded border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800">
@@ -394,13 +397,15 @@
                                                     @enderror
                                                 </td>
 
-                                                {{-- SELECTOR DESPLEGABLE CON BUSCADOR (IDÉNTICO A RESPONSABLES) --}}
+                                                {{-- SELECTOR DESPLEGABLE CON BUSCADOR DINÁMICO Y REACTIVO --}}
                                                 <td class="px-3 py-2">
                                                     <div
+                                                        wire:key="item-search-container-{{ $index }}"
                                                         x-data="{
                                                             is_open: false,
                                                             active_index: -1,
                                                             search_query: '',
+                                                            items: @js($filteredSerials[$index] ?? []),
                                                             selectItem(serial) {
                                                                 @this.set('detalles.{{ $index }}.item_serial_placa', serial);
                                                                 this.is_open = false;
@@ -431,12 +436,12 @@
                                                                 }
                                                             },
                                                             getFilteredItems() {
-                                                                const all = @js($filteredSerials[$index] ?? []);
-                                                                if (!this.search_query.trim()) return all;
+                                                                if (!this.search_query.trim()) return this.items;
                                                                 const q = this.search_query.toLowerCase();
-                                                                return all.filter(i => (i.display_search && i.display_search.toLowerCase().includes(q)));
+                                                                return this.items.filter(i => (i.display_search && i.display_search.toLowerCase().includes(q)));
                                                             }
                                                         }"
+                                                        x-init="$watch('$wire.filteredSerials.{{ $index }}', value => items = value || [])"
                                                         @click.away="is_open = false; active_index = -1"
                                                         class="relative"
                                                     >
@@ -444,7 +449,7 @@
                                                                 @click="is_open = !is_open; $nextTick(() => is_open && $refs.searchInput.focus())"
                                                                 class="w-full text-left rounded border border-gray-300 dark:border-neutral-700 focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-500 px-2 py-1.5 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100 text-xs shadow-sm flex justify-between items-center">
                                                             <span class="truncate">
-                                                                {{ $detalle['item_serial_placa'] ? $detalle['item_serial_placa'] : '-- Seleccionar Ítem --' }}
+                                                                {{ !empty($detalle['item_serial_placa']) ? $detalle['item_serial_placa'] : '-- Seleccionar Ítem --' }}
                                                             </span>
                                                             <svg class="h-4 w-4 text-gray-400 transition-transform duration-200 flex-shrink-0 ml-1"
                                                                  :class="{'transform rotate-180': is_open}"
@@ -518,7 +523,6 @@
                                                         @if($detalle['item_tipo'] === 'vehiculo') bg-gray-100 cursor-not-allowed @endif"
                                                         @if($detalle['item_tipo'] === 'vehiculo') readonly @endif>
 
-                                                    {{-- Muestra la cantidad disponible del ítem seleccionado --}}
                                                     @if(!is_null($detalle['stock_disponible']))
                                                         <div class="mt-1 flex items-center justify-between text-[11px] leading-tight">
                                                             <span class="text-gray-500 dark:text-gray-400">Disp:</span>
@@ -647,7 +651,7 @@
         </div>
     @endif
 
-    {{-- SUB-MODAL RÁPIDO PARA RESPONSABLES (Z-INDEX 70 FORZADO) --}}
+    {{-- SUB-MODAL RÁPIDO PARA RESPONSABLES --}}
     @if($modalQuickResponsableVisible)
         <div class="fixed inset-0 overflow-y-auto" style="z-index: 70;" aria-labelledby="modal-quick-resp" role="dialog" aria-modal="true">
             <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
