@@ -74,7 +74,17 @@ class RolePermissionSeeder extends Seeder
             'show detalle-salida',
             'edit detalle-salida',
             'delete detalle-salida',
-            'pdf detalle-salida'
+            'pdf detalle-salida',
+            'create requisicion',
+            'list requisicion',
+            'show requisicion',
+            'edit requisicion',
+            'delete requisicion',
+            'verify requisicion',
+            'approve requisicion',
+            'reject requisicion',
+            'pdf requisicion',
+            'entregar requisicion'
 
 
 
@@ -91,24 +101,59 @@ class RolePermissionSeeder extends Seeder
         // 2 Crear roles
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $userRole  = Role::firstOrCreate(['name' => 'user']);
+        $planificadorRole = Role::firstOrCreate(['name' => 'planificador']);
+        $procuraRole = Role::firstOrCreate(['name' => 'procura']);
 
         // 3 Asignar permisos a los roles
         $adminRole->syncPermissions($permissions); // Admin tiene todos
        $userRole->syncPermissions([
     'view dashboard',
-    'list responsable',
     'list material',
     'list facilidad',
     'list maquinaria-fija',
     'list sistema',
     'list vehiculo',
-    'show responsable',
     'show material',
     'show facilidad',
     'show maquinaria-fija',
     'show sistema',
     'show vehiculo',
+    'create requisicion',
+    'list requisicion',
+    'show requisicion',
+    'edit requisicion',
+    'pdf requisicion',
 ]);
+
+        // Planificador: verifica contra inventario, aprueba y rechaza las requisiciones
+        $planificadorRole->syncPermissions([
+            'view dashboard',
+            'list material',
+            'show material',
+            'create requisicion',
+            'list requisicion',
+            'show requisicion',
+            'edit requisicion',
+            'pdf requisicion',
+            'verify requisicion',
+            'approve requisicion',
+            'reject requisicion',
+        ]);
+
+        // Procura: edita requisiciones, trabaja con los materiales existentes
+        // y anota observaciones de lo que HAY y lo que NO HAY en inventario
+        $procuraRole->syncPermissions([
+            'view dashboard',
+            'list material',
+            'show material',
+            'create requisicion',
+            'list requisicion',
+            'show requisicion',
+            'edit requisicion',
+            'pdf requisicion',
+            'verify requisicion',
+            'entregar requisicion',
+        ]);
 
 
 

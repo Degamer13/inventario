@@ -12,6 +12,7 @@ use App\Livewire\MaquinariasFijas\MaquinariaFijaIndex;
 use App\Livewire\Sistemas\SistemaIndex;
 use App\Livewire\Vehiculos\VehiculoIndex;
 use App\Livewire\Salidas\SalidaIndex;
+use App\Livewire\Requisiciones\RequisicionIndex;
 use App\Livewire\BackupManager\BackupManager;
 
 // [ ... Rutas Públicas y Redirecciones ... ]
@@ -41,6 +42,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Rutas de responsables
     Route::get('responsables', ResponsableIndex::class)
+        ->middleware('can:list responsable')
         ->name('responsables.index');
 
     // Rutas de Inventario
@@ -62,6 +64,10 @@ Route::middleware(['auth'])->group(function () {
     // Rutas de SALIDAS
     Route::get('salidas', SalidaIndex::class)
         ->name('salidas.index');
+
+    // Rutas de REQUISICIONES DE PROCURA (Fabweld / Sarcos Porras)
+    Route::get('requisiciones', RequisicionIndex::class)
+        ->name('requisiciones.index');
 
     // Rutas de Roles y Permisos
     Route::get('roles', RoleIndex::class)

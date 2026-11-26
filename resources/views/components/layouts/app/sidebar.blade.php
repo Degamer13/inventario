@@ -53,10 +53,25 @@
                             {{ __('Responsables') }}
                         </flux:navlist.item>
                     @endcan
+
+<flux:navlist.group :heading="__('Requisiciones')">
+    @can('list requisicion')
+        <flux:navlist.item icon="book-open-text" :href="route('requisiciones.index')" :current="request()->routeIs('requisiciones.index') && !request()->filled('filtroTipo')" wire:navigate>
+            {{ __('Requisiciones') }}
+        </flux:navlist.item>
+        <flux:navlist.item icon="book-open-text" :href="route('requisiciones.index', ['filtroTipo' => 'fabweld'])" :current="request()->routeIs('requisiciones.index') && request()->get('filtroTipo') === 'fabweld'" wire:navigate>
+            {{ __('Requisiciones Fabweld') }}
+        </flux:navlist.item>
+        <flux:navlist.item icon="book-open-text" :href="route('requisiciones.index', ['filtroTipo' => 'sarcos_porras'])" :current="request()->routeIs('requisiciones.index') && request()->get('filtroTipo') === 'sarcos_porras'" wire:navigate>
+            {{ __('Requisiciones Sarcos Porras') }}
+        </flux:navlist.item>
+    @endcan
+</flux:navlist.group>
+
 <flux:navlist.group :heading="__('Inventario')">
     @can('list material')
         <flux:navlist.item icon="cube" :href="route('materiales.index')" :current="request()->routeIs('materiales.index')" wire:navigate>
-            {{ __('Materiales') }}
+            {{ __('Materiales / Herramientas') }}
         </flux:navlist.item>
     @endcan
 

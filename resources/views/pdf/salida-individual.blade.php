@@ -94,6 +94,18 @@
     <td style="width: 10%;"><span class="strong-text">FECHA:</span> {{ \Carbon\Carbon::parse($salida->fecha)->format('d/m/Y') }}</td>
 </tr>
 
+        <tr>
+            <td colspan="4"><span class="strong-text">TIPO / EMPRESA:</span>
+                @if ($salida->tipo === 'sarcos_porras')
+                    SARCOS PORRAS
+                @elseif ($salida->tipo === 'fabweld')
+                    FABWELD
+                @else
+                    —
+                @endif
+            </td>
+        </tr>
+
         <tr><td colspan="4" class="section-title">INFORMACIÓN DEL TRASLADO</td></tr>
         <tr>
             <td colspan="2"><span class="strong-text">ORIGEN:</span> {{ $salida->origen }}</td>

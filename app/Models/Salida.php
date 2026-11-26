@@ -17,12 +17,19 @@ class Salida extends Model
         'proyecto',
         'ano',
         'n_control',
+        'tipo',
         'fecha',
         'origen',
         'destino',
         'observaciones',
         'entregado_por_id',
         'recibido_por_id',
+    ];
+
+    // Constantes de apoyo para la interfaz
+    public const TIPOS = [
+        'fabweld' => 'Fabweld',
+        'sarcos_porras' => 'Sarcos Porras',
     ];
 
     /**
@@ -47,5 +54,10 @@ class Salida extends Model
     public function recibidoPor(): BelongsTo
     {
         return $this->belongsTo(Responsable::class, 'recibido_por_id');
+    }
+
+    public function getTipoLabelAttribute(): string
+    {
+        return self::TIPOS[$this->tipo] ?? '—';
     }
 }

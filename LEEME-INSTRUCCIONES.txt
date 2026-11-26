@@ -1,0 +1,152 @@
+==========================================================
+INSTRUCTIVO DE APLICACIÓN — MÓDULO DE REQUISICIONES
+Sistema InventaSys (Fabweld / Sarcos Porras)
+==========================================================
+
+QUÉ SE AGREGA
+-------------
+1. MÓDULO "REQUISICIONES" en el menú lateral (para usuario, administrador
+   y planificador):
+   - El USUARIO registra en digital lo que necesita con la nota de
+     requisición (basada en el formato 00-PC-F-01). Es lo único que
+     registra: los usuarios solo ven sus propias requisiciones.
+   - Dos tipos de requisición: FABWELD y SARCOS PORRAS. El menú muestra las
+     entradas "Requisiciones" (todas), "Requisiciones Fabweld" y
+     "Requisiciones Sarcos Porras" (cada una abre la lista ya filtrada
+     por su formato).
+   - Prioridad obligatoria: URGENTE, INTERMEDIO o BAJO.
+   - N° de requisición automático: RQ-{centro de costos}-{correlativo 3 dígitos}
+     (ejemplo: RQ-2026-AA-CC-001).
+   - Cada renglón: cantidad, unidad de medida, descripción, certificado de
+     calidad, proveedor sugerido y observaciones.
+   - Botón PDF para imprimir la nota de requisición.
+   - Botón "INSTRUCTIVO" en la pantalla de Requisiciones: muestra el
+     instructivo de llenado oficial del formato 00-PC-F-01 (campos,
+     responsables y reglas) para consulta rápida sin salir del sistema.
+
+2. ADMINISTRADOR:
+   - Recibe las requisiciones en su menú.
+   - Botón "Verificar contra Inventario": para cada renglón marca si el ítem
+     EXISTE en el sistema o NO, puede vincularlo a un material del inventario
+     y ver el stock disponible. El sistema sugiere coincidencias automáticas.
+   - En la misma verificación puede anotar el N° de O/C (orden de compra)
+     de cada renglón (campo que llena el Analista/Coordinador de Procura).
+   - El estado pasa a "Verificada".
+
+3. ROL "PROCURA" (Analista / Coordinador de Procura):
+   - Ve TODAS las requisiciones y puede EDITARLAS (formulario completo).
+   - Con el botón "Verificar contra Inventario" trabaja con los MATERIALES
+     EXISTENTES: marca si cada ítem existe o no, lo vincula a un material
+     del inventario, ve el stock disponible y anota las OBSERVACIONES de
+     lo que HAY y lo que NO HAY por renglón.
+   - Tiene acceso a la pantalla de MATERIALES (consulta) para revisar el
+     inventario existente.
+   - La observación por renglón queda guardada y visible en el detalle de
+     la requisición.
+
+4. CONTROL DE ENTREGA (ADMINISTRADOR y PROCURA):
+   - En las requisiciones VERIFICADAS o APROBADAS aparece el botón verde de
+     ENTREGA: permite marcar por renglón qué se ENTREGÓ y qué queda
+     PENDIENTE, con fecha y quién lo registró.
+   - El estado de entrega se ve en el listado (Entregado X/Y · Pendiente Z),
+     en el detalle de cada renglón y en el resumen del modal de entrega.
+
+4. ROL "PLANIFICADOR":
+   - VERIFICA contra inventario (vincula materiales, O/C y observaciones de
+     lo que hay y no hay), APRUEBA o RECHAZA las requisiciones (el rechazo
+     pide un motivo).
+   - Flujo completo: Pendiente -> Verificada (admin/procura/planificador) ->
+     Aprobada/Rechazada (planificador).
+
+5. NOTA DE SALIDA:
+   - Ahora se puede EDITAR una vez realizada (botón lápiz). Al guardar se
+     devuelve y se vuelve a descontar el stock correctamente.
+   - Nuevo campo TIPO: Fabweld o Sarcos Porras (obligatorio), visible en el
+     listado, con filtro, y en el PDF de la salida.
+
+6. PDF DE LA REQUISICIÓN (formato 00-PC-F-01):
+   - Firmas según el formato oficial: PREPARADO POR (solicitante),
+     REVISADO POR (quien verifica/planificación) y APROBADO POR (quien
+     aprueba o rechaza), con sus fechas correspondientes.
+   - Incluye el N° de O/C por renglón cuando ha sido cargado.
+   - El LOGO del encabezado corresponde a la empresa: si la requisición es
+     SARCOS PORRAS usa el logo de Sarcos (public/logo_sarcos.jpg); si es
+     FABWELD usa el logo general (public/logo.jpg). Lo mismo aplica a la
+     nota de salida según su campo TIPO.
+
+7. DOCUMENTOS OFICIALES INCLUIDOS:
+   - public/docs/00-PC-F-01_Requisicion_de_Procura_Rev_A.doc
+   - public/docs/00-PC-F-01_Requisicion_de_Procura_Rev_A_Sarcos_Porras.doc
+   (los formatos originales en Word de Global Supply, para consulta o
+   reimpresión del formulario oficial).
+
+CÓMO APLICAR (PASO A PASO)
+--------------------------
+1. Copie los archivos de este ZIP dentro de su carpeta del proyecto,
+   respetando las carpetas (si pide reemplazar, acepte).
+
+2. Encienda su servidor de base de datos (XAMPP / Laragon / MySQL).
+
+3. Abra una terminal dentro de la carpeta del proyecto y ejecute:
+
+      php artisan migrate
+
+   (crea las tablas requisiciones y detalles_requisicion, agrega la columna
+   tipo a salidas y la columna observacion_verificacion a detalles_requisicion)
+
+      php artisan db:seed --class=RequisicionModuleSeeder
+
+   (crea los permisos nuevos, los roles "planificador" y "procura" con sus
+   usuarios de ejemplo; agrega los permisos a los roles admin y user
+   existentes SIN borrar lo que ya tienen)
+
+   Opcional, para bases recién creadas también puede ejecutar:
+      php artisan db:seed --class=RolePermissionSeeder
+      php artisan db:seed --class=UserSeeder
+
+4. Recargue la página del sistema y verá el menú "Requisiciones".
+
+USUARIOS DE PRUEBA
+------------------
+   user@example.com          / password123   -> rol "user" (registra sus requisiciones)
+   admin@example.com         / password123   -> rol "admin" (verifica contra inventario)
+   procura@example.com       / password123   -> rol "procura" (edita requisiciones, vincula
+                                               materiales y anota qué hay y qué no hay)
+   planificador@example.com  / password123   -> rol "planificador" (aprueba/rechaza)
+
+   (Si esos usuarios ya existían en su base, no se modifican sus contraseñas.)
+
+NOTAS
+-----
+- Para convertir cualquier usuario existente en planificador o en procura:
+  vaya a Usuarios -> editar y asígnele el rol correspondiente.
+
+- Si su MySQL no estaba activo al momento de generar este paquete,
+  los comandos de arriba son los que aplican los cambios a su base de datos.
+
+ARCHIVOS INCLUIDOS EN ESTE PAQUETE
+----------------------------------
+NUEVOS:
+  app/Livewire/Requisiciones/RequisicionIndex.php
+  app/Models/Requisicion.php
+  app/Models/DetalleRequisicion.php
+  database/migrations/2026_11_23_000001_add_tipo_to_salidas_table.php
+  database/migrations/2026_11_23_000002_create_requisiciones_table.php
+  database/migrations/2026_11_23_000003_create_detalles_requisicion_table.php
+  database/migrations/2026_11_25_000001_add_observacion_verificacion_to_detalles_requisicion_table.php
+  database/migrations/2026_11_25_000002_add_entrega_to_detalles_requisicion_table.php
+  database/seeders/RequisicionModuleSeeder.php
+  resources/views/livewire/requisiciones/requisicion-index.blade.php
+  resources/views/pdf/requisicion.blade.php
+
+MODIFICADOS:
+  app/Livewire/DashboardCounters.php
+  app/Livewire/Salidas/SalidaIndex.php
+  app/Models/Salida.php
+  database/seeders/RolePermissionSeeder.php
+  database/seeders/UserSeeder.php
+  resources/views/components/layouts/app/sidebar.blade.php
+  resources/views/livewire/dashboard-counters.blade.php
+  resources/views/livewire/salidas/salida-index.blade.php
+  resources/views/pdf/salida-individual.blade.php
+  routes/web.php

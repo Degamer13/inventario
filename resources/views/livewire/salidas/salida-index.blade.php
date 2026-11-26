@@ -2,7 +2,7 @@
 
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 space-y-2 md:space-y-0">
         <div class="flex w-full md:w-1/2 space-x-2">
-            <input type="text" wire:model.defer="search" placeholder="Buscar N° de Control, Proyecto, Origen o Destino..."
+            <input type="text" wire:model.defer="search" wire:keydown.enter="searchSalidas" placeholder="Buscar N° de Control, Proyecto, Origen o Destino..."
                    class="w-full rounded border border-gray-300 dark:border-neutral-700 focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-500 dark:focus:border-indigo-400 px-3 py-2 bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100" />
 
             <button type="button" wire:click="searchSalidas" class="flex items-center px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 dark:hover:bg-neutral-700">
@@ -11,6 +11,12 @@
                 </svg>
                 Buscar
             </button>
+
+            <select wire:model.live="filtroTipo" class="w-52 rounded border border-gray-300 dark:border-neutral-700 focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-500 dark:focus:border-indigo-400 px-3 py-2 bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 text-sm">
+                <option value="">-- Tipo (Todos) --</option>
+                <option value="fabweld">Fabweld</option>
+                <option value="sarcos_porras">Sarcos Porras</option>
+            </select>
         </div>
 
         @can('create salida')
@@ -39,6 +45,7 @@
                 <thead class="bg-gray-100 dark:bg-neutral-950">
                     <tr>
                         <th class="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-200 uppercase">N° Control</th>
+                        <th class="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-200 uppercase">Tipo</th>
                         <th class="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-200 uppercase">Año</th>
                         <th class="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-200 uppercase">Fecha</th>
                         <th class="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-200 uppercase">Proyecto</th>
@@ -54,6 +61,11 @@
                     @forelse ($salidas as $salida)
                         <tr class="bg-white dark:bg-neutral-900 hover:bg-gray-50 dark:hover:bg-neutral-800">
                             <td class="px-4 py-2">{{ $salida->n_control }}</td>
+                            <td class="px-4 py-2">
+                                <span class="px-2 py-0.5 rounded text-xs font-bold uppercase {{ $salida->tipo === 'sarcos_porras' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300' : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300' }}">
+                                    {{ $salida->tipo_label }}
+                                </span>
+                            </td>
                             <td class="px-4 py-2">{{ $salida->ano }}</td>
                             <td class="px-4 py-2">{{ \Carbon\Carbon::parse($salida->fecha)->format('d/m/Y') }}</td>
                             <td class="px-4 py-2">{{ $salida->proyecto }}</td>
@@ -68,6 +80,16 @@
                             <td class="px-4 py-2 text-sm">{{ $salida->observaciones }}</td>
                             <td class="px-4 py-2 text-right">
                                 <div class="flex justify-end space-x-1">
+                                    @can('edit salida')
+                                        <button wire:click="openEditModal({{ $salida->id }})"
+                                                class="inline-flex items-center px-2 py-1 text-sm bg-amber-500 text-white rounded hover:bg-amber-600 dark:hover:bg-amber-400"
+                                                title="Editar">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+                                    @endcan
+
                                     @can('show salida')
                                         <button wire:click="openDetalleModal({{ $salida->id }})"
                                                 class="inline-flex items-center px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 dark:hover:bg-blue-400"
@@ -103,7 +125,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="px-4 py-4 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="11" class="px-4 py-4 text-center text-gray-500 dark:text-gray-400">
                                 No se encontraron registros de salidas.
                             </td>
                         </tr>
@@ -137,7 +159,7 @@
                     <div x-ref="header" class="bg-white dark:bg-neutral-900 px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-gray-200 dark:border-neutral-700">
                         <div class="flex justify-between items-center">
                             <h3 class="text-2xl font-bold leading-6 text-gray-900 dark:text-gray-100" id="modal-title">
-                                Registro de Salida de Inventario
+                                {{ $editingId ? 'Editar Salida de Inventario' : 'Registro de Salida de Inventario' }}
                             </h3>
                             <button wire:click="closeModal" type="button" class="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400">
                                 <span class="sr-only">Cerrar</span>
@@ -146,13 +168,18 @@
                                 </svg>
                             </button>
                         </div>
+                        <div class="mt-3 flex justify-center">
+                            <img src="{{ asset($tipo === 'sarcos_porras' ? 'logo_sarcos.jpg' : 'logo.jpg') }}"
+                                 alt="Logo {{ $tipo === 'sarcos_porras' ? 'Sarcos Porras' : 'Fabweld' }}"
+                                 class="h-16 object-contain">
+                        </div>
                     </div>
 
                     {{-- CONTENEDOR DE SCROLL PARA EL FORMULARIO --}}
                     <div class="px-4 sm:px-6 py-4 overflow-y-auto relative z-20"
                         :style="'max-height: calc(85vh - ' + (headerHeight + footerHeight + 20) + 'px);'">
 
-                        <form id="salidaForm" wire:submit.prevent="store">
+                        <form id="salidaForm" wire:submit.prevent="save">
                             {{-- Datos de Cabecera --}}
                             <h3 class="text-xl font-semibold mb-4 text-indigo-600 dark:text-indigo-400">Datos de Cabecera</h3>
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -160,6 +187,14 @@
                                     <label for="n_control" class="block text-sm font-medium mb-1">N° de Control:</label>
                                     <input type="text" id="n_control" wire:model.defer="n_control" class="w-full rounded border border-gray-300 dark:border-neutral-700 focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-500 dark:focus:border-indigo-400 px-3 py-2 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
                                     @error('n_control') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label for="tipo" class="block text-sm font-medium mb-1">Tipo (Empresa): <span class="text-red-500">*</span></label>
+                                    <select id="tipo" wire:model.live="tipo" class="w-full rounded border border-gray-300 dark:border-neutral-700 focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-500 dark:focus:border-indigo-400 px-3 py-2 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
+                                        <option value="fabweld">Fabweld</option>
+                                        <option value="sarcos_porras">Sarcos Porras</option>
+                                    </select>
+                                    @error('tipo') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div>
                                     <label for="fecha" class="block text-sm font-medium mb-1">Fecha:</label>
@@ -571,7 +606,7 @@
                     {{-- FOOTER DEL MODAL PRINCIPAL --}}
                     <div x-ref="footer" class="absolute inset-x-0 bottom-0 bg-gray-50 dark:bg-neutral-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse sm:gap-3 rounded-b-lg border-t border-gray-200 dark:border-neutral-700 z-30">
                         <button type="submit" form="salidaForm" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 dark:hover:bg-indigo-500">
-                            Guardar
+                            {{ $editingId ? 'Actualizar' : 'Guardar' }}
                         </button>
                         <button wire:click="closeModal" type="button" class="mt-3 sm:mt-0 px-4 py-2 bg-gray-300 dark:bg-neutral-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-neutral-500">
                             Cancelar
